@@ -1,17 +1,21 @@
 ---
 name: three-statement-model
-description: Build a fully linked, self-balancing three-statement financial model (income statement, balance sheet, cash flow statement + supporting schedules) as a professionally formatted Excel workbook — from a connected accounting system (Zoho Books or any ERP MCP connector), uploaded financials, or manual inputs — with jurisdiction-aware tax and accounting treatment focused on Egypt and the GCC (EAS, IFRS, Zakat, corporate tax, VAT context). Use whenever the user asks for a financial model, 3-statement model, financial forecast/projection, budget model, feasibility study model, or asks to "model" a company's financials.
+description: Build a fully linked, self-balancing three-statement financial model (income statement, balance sheet, cash flow statement + supporting schedules) as a professionally formatted, best-practice Excel workbook — a cover/contents sheet, the model, an audit/Checks sheet that rolls every integrity tie-out into one status light, an executive Dashboard (KPI tiles + charts incl. cash-flow & profit waterfalls), and a Sensitivity sheet (scenarios, two-way tables, tornado) — from a connected accounting system (Zoho Books or any ERP MCP connector), uploaded financials, or manual inputs, with jurisdiction-aware tax and accounting treatment focused on Egypt and the GCC (EAS, IFRS, Zakat, corporate tax, VAT context). Use whenever the user asks for a financial model, 3-statement model, financial forecast/projection, budget model, feasibility study model, dashboard, or asks to "model" a company's financials.
 ---
 
 # Three-Statement Model Builder
 
-You build annual three-statement models to a proven, self-balancing single-sheet
-template. The build is **deterministic**: a verified Python script generates the
-workbook and a verified harness accepts or rejects it. Your job is everything around
-that: resolving the jurisdiction, getting the data, constructing the input payload,
-choosing defensible forecast assumptions, running the scripts, and delivering the
-result with honest disclosures. Never hand-write the workbook cell by cell and never
-skip validation.
+You build annual three-statement models to a proven, self-balancing template. The
+build is **deterministic**: a verified Python script generates the workbook and a
+verified harness accepts or rejects it. The default deliverable is a complete,
+best-practice **multi-sheet workbook** — Cover · Model · Checks · Dashboard ·
+Sensitivity — built to recognised modelling standards (FAST/ICAEW/SMART:
+colour-coded cells, one-row-one-formula, aggregated integrity checks, dashboards,
+scenario/sensitivity analysis; see `references/BEST_PRACTICES.md`). Your job is
+everything around the build: resolving the jurisdiction, getting the data,
+constructing the input payload, choosing defensible forecast assumptions, running
+the scripts, and delivering the result with honest disclosures. Never hand-write
+the workbook cell by cell and never skip validation.
 
 All paths below are relative to this skill's directory. Do your work (payloads,
 built workbooks, logs) in a scratch/output directory OUTSIDE the skill folder —
@@ -78,20 +82,45 @@ Present the assumption set to the user for confirmation when the session is
 interactive; proceed with documented defaults when it is not.
 
 ### Stage 4 — Build
+Default (the full best-practice workbook — Cover · Model · Checks · Dashboard ·
+Sensitivity):
+```bash
+python3 scripts/build_workbook.py --inputs INPUTS.json \
+    --jurisdiction assets/jurisdictions/<iso2>.json --output MODEL.xlsx \
+    [--prepared-by "Name"]
+```
+Requires only python3 + openpyxl. It validates inputs (§1), fills the tax default
+from the pack if `tax_pct_ebt` is empty, applies the pack's label/units overrides,
+and writes the whole workbook in one pass: the byte-identical validated model
+sheet (blue inputs, black formulas, borders, conditional-formatted balance check,
+two charts) **plus** the Cover (contents, colour legend, disclosure), the Checks
+audit sheet (15 integrity tie-outs → one OK/ERROR light + amber plausibility
+alerts), the Dashboard (KPI tiles + 6 charts incl. live cash-flow & profit
+waterfalls), and the Sensitivity sheet (scenario summary, two-way heat-map tables,
+tornado). See `references/BEST_PRACTICES.md`, `references/DASHBOARD.md`,
+`references/SENSITIVITY.md` for the conventions each applies.
+
+Core-only alternative (just the single model sheet, e.g. for embedding):
 ```bash
 python3 scripts/build_model.py --inputs INPUTS.json \
     --jurisdiction assets/jurisdictions/<iso2>.json --output MODEL.xlsx
 ```
-Requires only python3 + openpyxl. The script validates inputs (§1), fills the tax
-default from the pack if `tax_pct_ebt` is empty, applies the pack's label/units
-overrides, and writes the complete formatted workbook (formulas live, color-coded
-inputs, borders, conditional-formatted balance checks, two charts).
+Both reuse the same `populate_model_sheet`, so the model sheet is identical either
+way. (Build all sheets in one pass — never load-and-resave to "add" sheets:
+openpyxl drops charts on load.)
 
 ### Stage 5 — Validate (mandatory, never skip)
+For the full workbook:
 ```bash
-python3 scripts/validate_model.py MODEL.xlsx --inputs INPUTS.json \
+python3 scripts/validate_workbook.py MODEL.xlsx --inputs INPUTS.json \
     --jurisdiction assets/jurisdictions/<iso2>.json
 ```
+It runs the core acceptance gate (`validate_model.py`) on the model sheet, then
+independently re-checks the supporting sheets: the Checks master recalculates to
+"OK" with no ERROR, every Dashboard KPI equals an independent simulation, and
+every Sensitivity value matches the deterministic economics. For a core-only build
+run `validate_model.py MODEL.xlsx --inputs … --jurisdiction …` directly.
+
 Exit code 0 required. The harness re-derives every number with an independent
 simulation, checks the formula canon and cross-column consistency, and recalculates
 the workbook — this REQUIRES either LibreOffice headless (`soffice`) or the Python
@@ -104,13 +133,18 @@ treat that as a failure, not a pass.
 
 ### Stage 6 — Deliver
 Send the workbook to the user (and to a connected drive if they want it filed).
-Accompany it with a compact report:
+Point them at the Cover sheet (contents + colour legend) and the Checks status
+light. Accompany it with a compact report:
 1. Forecast net earnings and closing cash by year.
 2. The driver set used (growth, margins, days, capex, financing, tax rate).
 3. Jurisdiction disclosure from JURISDICTIONS.md (tax basis, VAT note, standards
    context, and the "model-level simplification, not tax advice" caveat).
 4. Data-mapping disclosures from Stage 2.
-5. Validation status (harness pass, recalc method).
+5. Validation status (harness pass, recalc method) and a one-line read of the
+   Sensitivity sheet (what most moves the answer, per the tornado).
+6. The honesty caveats for the enhanced sheets: the Sensitivity grids are
+   computed at build time (a live-Excel Data Table recipe is on the sheet), and
+   scenario switching is a documented extension (`references/SENSITIVITY.md` §5).
 
 ## Deep references (read on demand, not all upfront)
 - `references/TEMPLATE_SPEC.md` — the normative template: input contract, cell map,
@@ -119,6 +153,17 @@ Accompany it with a compact report:
 - `references/MODEL_ANATOMY.md` — why the template is shaped this way (dependency
   graph, corkscrews, sign conventions, no-circularity design). Read when you need to
   explain or defend the model's mechanics.
+- `references/BEST_PRACTICES.md` — the modelling-standards guide behind the
+  workbook: standards (FAST/ICAEW/SMART), formatting, colour code, number formats,
+  signs, layout/white-space/alignment, sheet architecture & interlinking & input
+  sheets, error-checking & auditing. Read when adapting formatting/structure or
+  explaining why the model is built the way it is.
+- `references/DASHBOARD.md` — visualisation & dashboarding: chart choice, KPI
+  tiles, the waterfall (invisible-base) technique, alignment/sizing. Read when
+  changing the Dashboard.
+- `references/SENSITIVITY.md` — scenario & sensitivity analysis: data tables,
+  tornado, live-Excel Data Table and CHOOSE scenario-switch recipes. Read when
+  changing the Sensitivity sheet or a user wants live scenarios.
 - `references/JURISDICTIONS.md` — Egypt + GCC accounting standards and tax regimes,
   pack semantics, override recipes, disclosure texts.
 - `references/DATA_SOURCES.md` — MCP connector playbook and trial-balance mapping

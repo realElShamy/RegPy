@@ -200,7 +200,14 @@ def validate_inputs(payload):
     return errors, warnings
 
 
-def build(payload, pack, out_path):
+def populate_model_sheet(ws, payload, pack):
+    """Populate a worksheet with the complete, validated single-sheet model
+    (labels, blue inputs, black formulas, formatting, borders, conditional
+    formats, the two charts). Factored out of build() so the identical canonical
+    sheet can be embedded in a multi-sheet workbook (scripts/build_workbook.py)
+    within a SINGLE save pass — openpyxl silently drops charts when it loads and
+    re-saves a workbook, so every sheet must be written before the first save.
+    Returns the column-map info dict. Does not touch workbook-level state."""
     H, F = payload["n_historical"], payload["n_forecast"]
     DIP = payload.get("days_in_period", 365)
     Y0 = payload["first_historical_year"]
@@ -213,11 +220,6 @@ def build(payload, pack, out_path):
     FC_COLS = list(range(FC1, LAST + 1))
     ALL_COLS = HIST_COLS + FC_COLS
     labels = resolve_labels(pack, payload)
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Three Statement Model"
-    wb.properties.title = payload.get("company", "Three Statement Model")
 
     BODY = dict(name="Arial Narrow", size=12)
     F_BODY = Font(**BODY, color="FF000000")
@@ -507,10 +509,23 @@ def build(payload, pack, out_path):
         ch2.series[i].tx = SeriesLabel(strRef=StrRef(f"{sheet_ref}!$A${r}"))
     ws.add_chart(ch2, "G118")
 
-    wb.save(out_path)
     return {"columns": f"{L(FIRST)}-{L(LAST)}",
             "historical": f"{L(FIRST)}-{L(FC1-1)}",
             "forecast": f"{L(FC1)}-{L(LAST)}"}
+
+
+def build(payload, pack, out_path):
+    """Build the standalone single-sheet workbook (the core, independently
+    validated deliverable). For the full best-practice workbook — cover, checks,
+    dashboard, sensitivity — use scripts/build_workbook.py, which reuses
+    populate_model_sheet so the model sheet is byte-for-byte the same."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Three Statement Model"
+    wb.properties.title = payload.get("company", "Three Statement Model")
+    info = populate_model_sheet(ws, payload, pack)
+    wb.save(out_path)
+    return info
 
 
 def main():

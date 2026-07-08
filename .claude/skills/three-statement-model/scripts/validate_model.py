@@ -379,9 +379,13 @@ def recalc_workbook(path, sheet_name):
         xl = formulas.ExcelModel().loads(path).finish()
         sol = xl.calculate()
         base = os.path.basename(path).upper()
+        target = sheet_name.upper()
         for k, v in sol.items():
             m = re.match(rf"'\[{re.escape(base)}\]([^']+)'!([A-Z]+\d+)", k.upper())
-            if m:
+            # Filter to the target sheet: keying by bare coordinate would let
+            # a same-address cell on another sheet (dashboard/checks) clobber a
+            # model cell. Harmless when the workbook is single-sheet.
+            if m and m.group(1) == target:
                 try:
                     values[m.group(2)] = v.value[0, 0]
                 except Exception:
