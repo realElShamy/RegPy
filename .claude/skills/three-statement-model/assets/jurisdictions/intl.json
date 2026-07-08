@@ -1,0 +1,16 @@
+{
+ "country": "International (IFRS generic)",
+ "iso2": "intl",
+ "currency": null,
+ "units_label": "$000's",
+ "accounting_framework": "IFRS as issued by the IASB (assumed; verify the entity's actual framework)",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": null,
+  "basis": "No safe generic default exists. Set forecast_assumptions.tax_pct_ebt explicitly to the entity's statutory or recent effective corporate income tax rate."
+ },
+ "label_overrides": {},
+ "vat_note": "If the entity operates under a VAT/GST regime, AR/AP balances may be VAT-inclusive while revenue/COGS are VAT-exclusive; working-capital day ratios then overstate days slightly. Model-level simplification.",
+ "fiscal_year_note": "Template assumes annual periods of 365 days; align columns to the entity's fiscal year.",
+ "disclosure": "Tax is modeled as a single effective rate applied to earnings before tax - a modeling simplification, not tax advice. Statement presentation follows a condensed management-account layout, not statutory IFRS presentation."
+}

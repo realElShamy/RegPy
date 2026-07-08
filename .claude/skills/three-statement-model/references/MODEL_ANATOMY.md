@@ -3,7 +3,7 @@
 A complete tear-down of the uploaded reference case-study workbook. Every fact below was extracted programmatically from the workbook
 (formulas, cached values, styles, comments, charts, conditional formatting, raw OOXML).
 This document is the ground truth behind the harness prompt in
-[`PROMPT_THREE_STATEMENT_MODEL.md`](PROMPT_THREE_STATEMENT_MODEL.md).
+[`TEMPLATE_SPEC.md`](TEMPLATE_SPEC.md).
 
 ---
 
@@ -305,10 +305,10 @@ structural choice observed in the file:
 
 ## 9. Reference data extracted from the workbook
 
-- [`harness/reference_values.json`](harness/reference_values.json) — every populated cell
+- the repository harness reference data — every populated cell
   D2:M116: formula (or input) + cached value, plus row labels. Ground truth for the
   validation harness.
-- [`harness/case_study_inputs.json`](harness/case_study_inputs.json) — the pure inputs
+- [`../assets/example_inputs.json`](../assets/example_inputs.json) — the pure inputs
   (blue cells) reshaped as a parameterization payload: 5 years of historicals + 5 years
   of forecast assumptions.
 

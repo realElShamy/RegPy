@@ -1,6 +1,6 @@
 # Three-Statement Financial Model — Reverse Engineering & Prompt Harness
 
-This folder reverse engineers the **CFI Case Study Three Statement Model** workbook and
+This folder reverse engineers a widely used industry **case-study three-statement model** workbook and
 packages what was learned into a production-grade, harness-engineered prompt that makes
 an LLM agent build equivalent models end-to-end for any company.
 
@@ -11,13 +11,13 @@ an LLM agent build equivalent models end-to-end for any company.
 | [`REVERSE_ENGINEERING.md`](REVERSE_ENGINEERING.md) | Complete tear-down of the original workbook: row map, every formula, the dependency graph, formatting system, sign conventions, checks, and the deliberate design choices (no-circularity, corkscrews, cash as the balancing item) |
 | [`PROMPT_THREE_STATEMENT_MODEL.md`](PROMPT_THREE_STATEMENT_MODEL.md) | **The main deliverable.** An end-to-end system prompt (ROLE + §1–§9): input contract, canonical cell map, dependency-ordered build phases with exact formula templates, formatting spec, known failure modes, and a mandatory self-validation protocol |
 | [`harness/validate_model.py`](harness/validate_model.py) | Deterministic acceptance test. Validates any generated .xlsx in three layers: structure, formula integrity (incl. column-consistency), and values against an independent Python re-implementation of the model economics. Recalculates via LibreOffice headless / cached values / `formulas` |
-| [`harness/case_study_inputs.json`](harness/case_study_inputs.json) | The CFI case study reshaped as the prompt's parameterization payload (5 historical years + 5 years of forecast assumptions) |
+| [`harness/case_study_inputs.json`](harness/case_study_inputs.json) | The reference case study reshaped as the prompt's parameterization payload (5 historical years + 5 years of forecast assumptions) |
 | [`harness/reference_values.json`](harness/reference_values.json) | Ground truth extracted from the original workbook — every populated cell's formula and cached value — for regression testing |
 | [`examples/blind_build_model.xlsx`](examples/blind_build_model.xlsx) | The workbook produced by the blind-build test — a live demonstration of what the prompt generates |
 
 ## Verification status
 
-- The harness run against the **original CFI workbook**: **1,884 checks, 0 failures**
+- The harness run against the **original reference workbook**: **1,884 checks, 0 failures**
   (structure, historical + forecast formula canon, values, tie-outs, regression) —
   proving the reverse-engineered formula canon and the independent simulation exactly
   reproduce the source model.
@@ -32,20 +32,32 @@ an LLM agent build equivalent models end-to-end for any company.
   were fixed, including one blocker (the historical opening-cash corkscrew was
   under-specified) independently confirmed by the blind builder's ambiguity log.
 
+## The automated skill
+
+Everything in this folder is productized as a self-contained, harness-injectable
+skill at [`../.claude/skills/three-statement-model/`](../.claude/skills/three-statement-model/):
+a deterministic builder + validator pair driven by an orchestrating `SKILL.md`
+pipeline that resolves the entity's jurisdiction (Egypt and GCC accounting/tax
+packs: EAS, IFRS, Zakat, corporate tax, DMTT), pulls historicals from whatever MCP
+data source is connected (accounting systems, drives, uploads) or manual input,
+builds the workbook, gates it through the acceptance harness, and delivers it with
+jurisdiction disclosures. Drop the skill folder into any agent harness's skills
+directory to use it elsewhere.
+
 ## Usage
 
 ```bash
 # validate any generated model
 python3 harness/validate_model.py MODEL.xlsx \
     --inputs harness/case_study_inputs.json \
-    [--reference harness/reference_values.json]   # regression vs the CFI original
+    [--reference harness/reference_values.json]   # regression vs the reference original
 # exit code 0 = accepted
 ```
 
 To build a model for a different company: keep the prompt unchanged, supply a new
 inputs JSON conforming to the Input Contract (§1 of the prompt), and gate the output
 with `validate_model.py --inputs <your inputs>` (omit `--reference`, which is specific
-to the CFI case data).
+to the reference case data).
 
 ## Model architecture in one paragraph
 

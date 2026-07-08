@@ -3,16 +3,16 @@
 This is a production-grade, end-to-end prompt that makes an LLM agent (or a human analyst)
 build a fully linked, self-balancing three-statement financial model in the exact style of
 the reference case-study template that was reverse engineered in
-[`REVERSE_ENGINEERING.md`](REVERSE_ENGINEERING.md).
+[`MODEL_ANATOMY.md`](MODEL_ANATOMY.md).
 
 **How to deploy it**
 
 | Slot | Content |
 |---|---|
 | System prompt | Everything inside the fenced block below (ROLE + §1–§9) |
-| User turn | The per-company payload: an `inputs.json` conforming to the Input Contract (§1) — see [`harness/case_study_inputs.json`](harness/case_study_inputs.json) for a worked example |
+| User turn | The per-company payload: an `inputs.json` conforming to the Input Contract (§1) — see [`../assets/example_inputs.json`](../assets/example_inputs.json) for a worked example |
 | Tools | A Python runtime with `openpyxl` (to write the .xlsx) and, for the self-validation loop, LibreOffice headless or the `formulas` package (to recalculate) |
-| Acceptance test | Run [`harness/validate_model.py`](harness/validate_model.py) against the produced file; exit code 0 = accept. The prompt's own §8 mirrors these checks so the agent can self-verify before handing the file over |
+| Acceptance test | Run [`../scripts/validate_model.py`](../scripts/validate_model.py) against the produced file; exit code 0 = accept. The prompt's own §8 mirrors these checks so the agent can self-verify before handing the file over |
 | Sampling | Deterministic settings (temperature 0 / low) — this is a precision task |
 
 The prompt is **invariant**: nothing in it is specific to one company. All

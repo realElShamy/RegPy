@@ -1,0 +1,79 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Three-Statement Model Input Contract",
+ "description": "Per-company payload for scripts/build_model.py. All money values in the stated units (thousands); percentages as decimals; historical arrays oldest-first with n_historical entries; forecast arrays with n_forecast entries. Signs: issuance positive, repayment negative.",
+ "type": "object",
+ "required": ["company", "units", "first_historical_year", "n_historical",
+              "n_forecast", "days_in_period", "historical", "forecast_assumptions"],
+ "properties": {
+  "company": {"type": "string"},
+  "units": {"type": "string", "description": "e.g. 'EGP thousands', 'SAR thousands', 'USD thousands'"},
+  "jurisdiction": {"type": "string", "description": "ISO-2 country code matching a pack in assets/jurisdictions/ (eg, sa, ae, qa, kw, bh, om, intl). Optional; informational — the pack is passed to the scripts separately."},
+  "first_historical_year": {"type": "integer"},
+  "n_historical": {"type": "integer", "minimum": 2},
+  "n_forecast": {"type": "integer", "minimum": 1},
+  "days_in_period": {"type": "integer", "const": 365},
+  "historical": {
+   "type": "object",
+   "required": ["revenue", "cogs", "salaries_and_benefits", "rent_and_overhead",
+                "depreciation_amortization", "interest_expense", "taxes", "cash",
+                "accounts_receivable", "inventory", "ppe_closing", "accounts_payable",
+                "debt_closing", "equity_capital", "retained_earnings",
+                "net_earnings_cf", "depreciation_cf", "change_in_nwc_cf", "capex",
+                "debt_issuance_repayment", "equity_issuance_repayment",
+                "opening_cash_first_year", "ppe_opening_first_year",
+                "debt_opening_first_year"],
+   "properties": {
+    "revenue": {"$ref": "#/$defs/series"},
+    "cogs": {"$ref": "#/$defs/series"},
+    "salaries_and_benefits": {"$ref": "#/$defs/series"},
+    "rent_and_overhead": {"$ref": "#/$defs/series"},
+    "depreciation_amortization": {"$ref": "#/$defs/series"},
+    "interest_expense": {"$ref": "#/$defs/series"},
+    "taxes": {"$ref": "#/$defs/series", "description": "Income tax / Zakat charge as reported"},
+    "cash": {"$ref": "#/$defs/series"},
+    "accounts_receivable": {"$ref": "#/$defs/series"},
+    "inventory": {"$ref": "#/$defs/series"},
+    "ppe_closing": {"$ref": "#/$defs/series", "description": "Net PP&E at year end"},
+    "accounts_payable": {"$ref": "#/$defs/series"},
+    "debt_closing": {"$ref": "#/$defs/series", "description": "Interest-bearing debt at year end"},
+    "equity_capital": {"$ref": "#/$defs/series"},
+    "retained_earnings": {"$ref": "#/$defs/series"},
+    "net_earnings_cf": {"$ref": "#/$defs/series", "description": "As-reported CFS net earnings line"},
+    "depreciation_cf": {"$ref": "#/$defs/series"},
+    "change_in_nwc_cf": {"$ref": "#/$defs/series", "description": "Increase in NWC positive (cash outflow)"},
+    "capex": {"$ref": "#/$defs/series", "description": "Displayed positive"},
+    "debt_issuance_repayment": {"$ref": "#/$defs/series"},
+    "equity_issuance_repayment": {"$ref": "#/$defs/series"},
+    "opening_cash_first_year": {"type": "number"},
+    "ppe_opening_first_year": {"type": "number"},
+    "debt_opening_first_year": {"type": "number"}
+   }
+  },
+  "forecast_assumptions": {
+   "type": "object",
+   "required": ["revenue_growth_pct", "cogs_pct_revenue", "salaries_pct_revenue",
+                "rent_and_overhead", "da_pct_opening_ppe", "interest_pct_avg_debt",
+                "ar_days", "inventory_days", "ap_days", "capex",
+                "debt_issuance_repayment", "equity_issuance_repayment"],
+   "properties": {
+    "revenue_growth_pct": {"$ref": "#/$defs/series"},
+    "cogs_pct_revenue": {"$ref": "#/$defs/series"},
+    "salaries_pct_revenue": {"$ref": "#/$defs/series"},
+    "rent_and_overhead": {"$ref": "#/$defs/series"},
+    "da_pct_opening_ppe": {"$ref": "#/$defs/series"},
+    "interest_pct_avg_debt": {"$ref": "#/$defs/series"},
+    "tax_pct_ebt": {"$ref": "#/$defs/series", "description": "Optional: if omitted or empty, build_model.py fills it from the jurisdiction pack's default_tax_line.rate"},
+    "ar_days": {"$ref": "#/$defs/series"},
+    "inventory_days": {"$ref": "#/$defs/series"},
+    "ap_days": {"$ref": "#/$defs/series"},
+    "capex": {"$ref": "#/$defs/series"},
+    "debt_issuance_repayment": {"$ref": "#/$defs/series"},
+    "equity_issuance_repayment": {"$ref": "#/$defs/series"}
+   }
+  }
+ },
+ "$defs": {
+  "series": {"type": "array", "items": {"type": "number"}}
+ }
+}

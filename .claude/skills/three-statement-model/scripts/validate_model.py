@@ -18,8 +18,12 @@ PROMPT_THREE_STATEMENT_MODEL.md, in three layers:
                   asserted for every column.
 
 Usage:
-  python3 validate_model.py MODEL.xlsx --inputs case_study_inputs.json
-        [--reference reference_values.json] [--tolerance 0.01] [--sheet NAME]
+  python3 validate_model.py MODEL.xlsx --inputs inputs.json
+        [--jurisdiction pack.json] [--reference reference_values.json]
+        [--tolerance 0.01] [--sheet NAME]
+
+With --jurisdiction, the pack's units_label and label_overrides are applied to
+the expected row labels before the structure check, mirroring build_model.py.
 
 Exit code 0 = all checks pass, 1 = failures (report printed to stdout).
 """
@@ -377,6 +381,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("model")
     ap.add_argument("--inputs", required=True)
+    ap.add_argument("--jurisdiction", help="jurisdiction pack JSON (optional)")
     ap.add_argument("--reference")
     ap.add_argument("--tolerance", type=float, default=0.01)
     ap.add_argument("--sheet", default="Three Statement Model")
@@ -386,6 +391,19 @@ def main():
     nh = inputs["n_historical"]
     y0 = inputs["first_historical_year"]
     set_columns(nh, inputs["n_forecast"])
+    if args.jurisdiction:
+        pack = json.load(open(args.jurisdiction))
+        units = pack.get("units_label", "$000's")
+        for r in list(ROW_LABELS):
+            ROW_LABELS[r] = ROW_LABELS[r].replace("($000's)", f"({units})")
+        for r, label in (pack.get("label_overrides") or {}).items():
+            ROW_LABELS[int(r)] = label
+        # Pack may default the tax line; mirror build_model.py so the
+        # simulation uses the same rates the workbook was built with.
+        rate = (pack.get("default_tax_line") or {}).get("rate")
+        fa = inputs["forecast_assumptions"]
+        if rate is not None and not fa.get("tax_pct_ebt"):
+            fa["tax_pct_ebt"] = [rate] * inputs["n_forecast"]
     failures, passes = [], 0
 
     def check(ok, msg):
