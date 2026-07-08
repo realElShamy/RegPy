@@ -391,11 +391,17 @@ def main():
     nh = inputs["n_historical"]
     y0 = inputs["first_historical_year"]
     set_columns(nh, inputs["n_forecast"])
-    if args.jurisdiction:
-        pack = json.load(open(args.jurisdiction))
-        units = pack.get("units_label", "$000's")
-        for r in list(ROW_LABELS):
-            ROW_LABELS[r] = ROW_LABELS[r].replace("($000's)", f"({units})")
+    pack = json.load(open(args.jurisdiction)) if args.jurisdiction else None
+    # Mirror build_model.resolve_labels: payload units_label > pack > default;
+    # row 37 falls back to the pack's default_tax_line.label; overrides win.
+    units = (inputs.get("units_label")
+             or (pack or {}).get("units_label", "$000's"))
+    for r in list(ROW_LABELS):
+        ROW_LABELS[r] = ROW_LABELS[r].replace("($000's)", f"({units})")
+    if pack:
+        tax_label = (pack.get("default_tax_line") or {}).get("label")
+        if tax_label:
+            ROW_LABELS[37] = tax_label
         for r, label in (pack.get("label_overrides") or {}).items():
             ROW_LABELS[int(r)] = label
         # Pack may default the tax line; mirror build_model.py so the
@@ -404,6 +410,9 @@ def main():
         fa = inputs["forecast_assumptions"]
         if rate is not None and not fa.get("tax_pct_ebt"):
             fa["tax_pct_ebt"] = [rate] * inputs["n_forecast"]
+    if not inputs["forecast_assumptions"].get("tax_pct_ebt"):
+        sys.exit("tax_pct_ebt is missing/empty: pass the same --jurisdiction pack "
+                 "used at build time, or set tax_pct_ebt in the inputs JSON")
     failures, passes = [], 0
 
     def check(ok, msg):

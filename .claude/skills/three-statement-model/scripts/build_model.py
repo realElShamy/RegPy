@@ -77,11 +77,16 @@ GPM_FMT = '0%'
 CHK_FMT = '0.0000_ ;\\-0.0000\\ '
 
 
-def resolve_labels(pack):
-    """Base labels + jurisdiction overrides. '{units}' expands to the pack's
-    units label (default $000's)."""
-    units = (pack or {}).get("units_label", "$000's")
+def resolve_labels(pack, payload=None):
+    """Base labels + jurisdiction overrides. '{units}' expands to the payload's
+    units_label if set, else the pack's, else $000's. Row 37 falls back to the
+    pack's default_tax_line.label; explicit label_overrides win over both."""
+    units = ((payload or {}).get("units_label")
+             or (pack or {}).get("units_label", "$000's"))
     labels = {r: t.format(units=units) for r, t in BASE_LABELS.items()}
+    tax_label = ((pack or {}).get("default_tax_line") or {}).get("label")
+    if tax_label:
+        labels[37] = tax_label
     for r, t in ((pack or {}).get("label_overrides") or {}).items():
         labels[int(r)] = t
     return labels
@@ -168,7 +173,7 @@ def build(payload, pack, out_path):
     HIST_COLS = list(range(FIRST, FC1))
     FC_COLS = list(range(FC1, LAST + 1))
     ALL_COLS = HIST_COLS + FC_COLS
-    labels = resolve_labels(pack)
+    labels = resolve_labels(pack, payload)
 
     wb = Workbook()
     ws = wb.active

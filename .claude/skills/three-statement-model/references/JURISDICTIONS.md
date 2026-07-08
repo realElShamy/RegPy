@@ -15,7 +15,11 @@ The template carries ONE tax line: `Taxes = EBT × tax_pct_ebt`. Packs adapt it 
    `rate: null`, which forces an explicit choice — the build fails loudly rather
    than guess.
 2. **Labels/units** — `label_overrides` renames rows (e.g. Saudi "Zakat and Income
-   Tax"); `units_label` rewrites the `($000's)` suffixes (e.g. `EGP '000`).
+   Tax"); row 37 also falls back to `default_tax_line.label` when not overridden;
+   `units_label` rewrites the `($000's)` suffixes (e.g. `EGP '000`), and a
+   `units_label` in the *payload* overrides the pack's (for e.g. millions
+   presentation). Both scripts apply identical logic, so builds round-trip the
+   validator.
 3. **Recipes + disclosures** — `tax_recipes` are the override formulas you apply for
    non-default situations; `disclosure` is the text that must accompany delivery.
 
@@ -41,8 +45,9 @@ context you disclose, not mechanics the annual model computes.
   passed in June 2026 (listed-securities CGT → stamp duty, solidarity levy made
   deductible) — headline CIT unchanged.
 - **VAT 14%** (5% machinery schedule) — disclosure note only.
-- **Units/FY:** `EGP '000` (EGP m for large companies); calendar year default,
-  July–June common for state-linked entities.
+- **Units/FY:** `EGP '000` default; for large companies modeled in millions set
+  `units_label` in the payload (e.g. `"EGP m"`) — it overrides the pack's label in
+  both scripts. Calendar year default, July–June common for state-linked entities.
 
 ## Saudi Arabia (`sa`)
 
@@ -58,9 +63,10 @@ context you disclose, not mechanics the annual model computes.
   *Foreign share* → **CIT 20%** of its share of taxable income (oil/hydrocarbon
   50–85% tiered by capital).
   **Mixed ownership recipe:** `tax_pct_ebt = 0.20 × foreign_share + 0.025 ×
-  saudi_gcc_share`. Label overrides rename rows 14/37 to "Zakat and Income Tax"
-  (Tadawul presentation convention). No enacted Pillar Two as of mid-2026 (new
-  Income Tax Law still draft).
+  saudi_gcc_share`. Label overrides apply the Tadawul presentation convention:
+  row 37 → "Zakat and Income Tax", row 35 → "Earnings Before Zakat and Income
+  Tax", row 14 → "Zakat & Tax Rate (% of Earnings Before Tax)". No enacted
+  Pillar Two as of mid-2026 (new Income Tax Law still draft).
 - **VAT 15%**; SAR pegged 3.75/USD; return due 120 days after year end.
 
 ## United Arab Emirates (`ae`)

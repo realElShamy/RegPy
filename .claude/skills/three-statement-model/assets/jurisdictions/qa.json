@@ -21,7 +21,7 @@
  "fiscal_year_note": "Calendar tax year default (first period may run 6-18 months); return due 4 months after year end via Dhareeba. QAR pegged at 3.64/USD.",
  "depreciation_note": "Tax depreciation = accounting depreciation capped at straight-line rates in the Executive Regulations (Council of Ministers Decision 39/2019, as amended Feb 2026): buildings 5%, furniture/office equipment 15%, vehicles 20%, computers 33.33%.",
  "pillar_two_note": "DMTT + IIR in force from FY2025 for large MNE groups.",
- "disclosure": "Tax modeled as an effective rate on earnings before tax reflecting the foreign-ownership share only (Qatari/GCC share exempt) - a simplification; not tax advice. Statements per IFRS.",
+ "disclosure": "Tax modeled as an effective rate on earnings before tax reflecting the foreign-ownership share only (Qatari/GCC share exempt) - a simplification; not tax advice. Statements per IFRS. For MNE groups >= EUR 750m revenue, a 15% domestic minimum top-up tax + IIR applies from FY2025 regardless of ownership and is not reflected in the ownership-based rate.",
  "sources": [
   "https://taxsummaries.pwc.com/qatar/corporate/taxes-on-corporate-income",
   "https://www.gta.gov.qa/"

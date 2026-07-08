@@ -12,7 +12,7 @@
  },
  "tax_recipes": {
   "foreign_owned": "tax_pct_ebt = 0.15 on the foreign corporate share of profits.",
-  "kuwaiti_private_unlisted": "tax_pct_ebt ~ 0.01 (Zakat, for KSCs) or 0 for other forms; disclose.",
+  "kuwaiti_private_unlisted": "tax_pct_ebt ~ 0.02 aggregate proxy for closed KSCs (Zakat 1% + KFAS 1% - bases differ; KFAS applies to shareholding companies generally, not just listed); 0 for WLLs and other non-shareholding forms; disclose.",
   "kuwaiti_listed": "tax_pct_ebt ~ 0.045 aggregate proxy (NLST 2.5% + Zakat 1% + KFAS 1% - bases differ; refine if material).",
   "business_profits_tax_watch": "Broad 15% Business Profits Tax (KWD 1.5m revenue exemption) remains an UNENACTED draft targeted at 1 Jan 2027 - flag in long forecasts.",
   "pillar_two": "DMTT 15% (Decree-Law 157/2024, Exec Regs MR 55/2025) for FYs from 1 Jan 2025, groups >= EUR 750m: use 0.15 if in scope."
@@ -22,7 +22,7 @@
  "fiscal_year_note": "Calendar year default. KWD quotes to 3 decimals (fils); no USD peg - KWD floats against a basket.",
  "depreciation_note": "For the 15% foreign-company tax, Executive Rule 30/2013 mandates straight-line maximum rates: buildings 4%, plant & machinery 20%, motor vehicles 15-20%, office equipment 15%.",
  "pillar_two_note": "DMTT in force from FY2025 for large MNE groups; voluntary advance-payment mechanism per MoF Circular 1/2026.",
- "disclosure": "Kuwait's tax line depends on ownership and listing status: 15% applies to foreign corporate ownership only; Kuwaiti companies bear NLST/Zakat/KFAS quasi-taxes on differing bases. The modeled effective rate is a proxy; the draft 15% Business Profits Tax (targeted 2027) is not reflected. Not tax advice.",
+ "disclosure": "Kuwait's tax line depends on ownership and listing status: 15% applies to foreign corporate ownership only; Kuwaiti companies bear NLST/Zakat/KFAS quasi-taxes on differing bases. The modeled effective rate is a proxy; the draft 15% Business Profits Tax (targeted 2027) is not reflected. Not tax advice. For MNE groups >= EUR 750m revenue, a 15% domestic minimum top-up tax (DMTT) applies from FY2025 and is not reflected in the default rate.",
  "sources": [
   "https://taxsummaries.pwc.com/kuwait/corporate/taxes-on-corporate-income",
   "https://taxsummaries.pwc.com/kuwait/corporate/other-taxes"

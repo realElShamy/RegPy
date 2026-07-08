@@ -17,7 +17,8 @@
  },
  "label_overrides": {
   "14": "Zakat & Tax Rate (% of Earnings Before Tax)",
-  "37": "Zakat and Income Tax"
+  "37": "Zakat and Income Tax",
+  "35": "Earnings Before Zakat and Income Tax"
  },
  "vat_note": "VAT 15% since July 2020 (registration threshold SAR 375,000). Not a P&L line here; AR/AP balances may be VAT-inclusive. FATOORA e-invoicing integration effectively universal since mid-2026.",
  "fiscal_year_note": "Gregorian or Hijri fiscal years permitted; Zakat/CIT return due within 120 days of year end. SAR pegged at 3.75/USD.",
