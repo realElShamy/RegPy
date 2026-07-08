@@ -51,9 +51,21 @@ model's blue inputs change.
 | In-cell micro-trend | **Sparkline** | see §5 |
 | Valuation range across methods | Football-field (floating bars) | (extension) |
 
+The **combo bar+line** (revenue bars + margin-% line on a secondary axis) is
+idiomatic in finance and the skill uses it, but be aware *Storytelling with Data*
+warns that a **secondary y-axis can invent a correlation** by where the two
+scales happen to cross. Mitigate it: **colour-match each axis to its series**
+(navy bars ↔ navy left axis "Revenue", accent line ↔ accent right axis "Margin
+%"), make the rate unmistakably a rate (percent format), and keep it to two
+series. The clean alternative is two vertically-stacked panels sharing the
+x-axis, or indexing both series to 100 at t₀ on one axis.
+
 Avoid: pie charts for anything with >3 slices or where comparison matters
 (angles read poorly); dual-axis combos where the two scales invite a false
-correlation; stacked areas with many bands.
+correlation; stacked areas with many bands; and — for accessibility — red/green
+as the *only* difference between two series (≈8% of men can't distinguish them;
+add position, labels or a shape). A colour-vision-safe categorical order (Wong):
+blue `#0072B2`, orange `#E69F00`, vermillion `#D55E00`, bluish-green `#009E73`.
 
 ---
 
@@ -102,6 +114,13 @@ The skill draws two:
   Closing cash (the final year's cash bridge).
 - **Profit waterfall:** Revenue → −COGS → −Salaries → −Rent → −D&A → −Interest →
   −Tax → Net earnings (the P&L bridge).
+
+Finishing touches when polishing a waterfall in Excel: a narrow gap width
+(~15%) so the bars read as a connected bridge, connector lines between steps, and
+green/red distinguished by **position** (up-bars and down-bars sit at different
+heights) as well as hue — so it survives colour-blind viewing. Excel 2016+ has a
+native Waterfall type (right-click a total → *Set as Total*); the skill uses the
+invisible-base technique instead so the chart renders everywhere and stays live.
 
 ---
 

@@ -72,12 +72,17 @@ gradient at a glance. Reading a two-way table well:
 
 ### Why the grids are computed, not live — and how to make them live
 
-`openpyxl` (and any programmatic `.xlsx` writer) **cannot emit a native Excel
-What-If Data Table** — the `{=TABLE(...)}` array is a feature of the Excel
-calculation engine, not a storable formula. So the skill computes each grid cell
-by re-solving the model in Python and writes the numbers, clearly labelled
-"computed at build time." To convert a grid to a **live** Excel data table the
-reader can recalculate:
+A live Excel What-If Data Table is a single `{=TABLE(row_input,col_input)}`
+array that the Excel **calculation engine** fills by re-running the model once
+per cell. `openpyxl` (v3.1+) can *serialise* the underlying element
+(`openpyxl.worksheet.formula.DataTableFormula` writes `<f t="dataTable" …>`),
+but it only **round-trips** it — there is no high-level builder, and openpyxl
+**does not compute** anything, so you would have to hand-lay the geometry and
+supply cached values yourself, and a viewer that doesn't recalculate would show
+them blank. So the skill takes the robust path: it computes each grid cell by
+re-solving the model in Python and writes the numbers, clearly labelled
+"computed at build time," which is deterministic and independently verifiable.
+To convert a grid to a **live** Excel data table the reader can recalculate:
 
 1. Put the output formula in the grid's **top-left corner**, e.g.
    `='Three Statement Model'!<lastcol>38` (final-year net earnings).
@@ -87,10 +92,14 @@ reader can recalculate:
 4. **Data ▸ What-If Analysis ▸ Data Table**; set *Row input cell* and *Column
    input cell* to the two driver cells the axes represent.
 
-Excel then fills the body live. (Caveat: a data table pointed at a single
-driver cell varies *that year's* driver only; to sweep a driver across *all*
-forecast years, first route every forecast year's driver through one master
-cell, then point the data table at the master.)
+Two caveats that trip people up: (a) the **input cells must be on the same
+worksheet as the table** — a data table on an Outputs sheet pointing at an
+Inputs-sheet cell silently returns the base case in every cell; and (b) a data
+table pointed at a single driver cell varies *that year's* driver only, so to
+sweep a driver across *all* forecast years, first route every forecast year's
+driver through one master cell **on that sheet**, then point the data table at
+the master. (For heavy models, Formulas ▸ Calculation Options ▸ *Automatic
+Except Data Tables* stops the table recomputing on every edit.)
 
 ---
 
@@ -135,10 +144,23 @@ layer on a separate inputs sheet:
 4. Point the model's driver cells at the active column.
 
 This is the institutional "scenario manager without the Scenario Manager"
-pattern: one cell flips the entire model between coherent worlds, every
-assumption stays visible and colour-coded, and there is still no circularity.
-Because it changes the model's blue inputs into links, apply it as an *extension*
-of the delivered workbook, not inside the validated single sheet.
+pattern (preferred over Excel's Scenario Manager, whose cases are buried in a
+dialog and capped at 32 changing cells): one cell flips the entire model between
+coherent worlds, every assumption stays visible and colour-coded, and there is
+still no circularity — `CHOOSE`/`INDEX` pick a constant, so the switch is acyclic
+and additive. Use `CHOOSE($switch, base, up, down)` for a few fixed cases or
+`INDEX($E10:$G10, $switch)` when the cases scale; guard a free-typed switch with
+`IFERROR(INDEX(...), base)`. Unlike a native Data Table, this pattern is fully
+**programmatically generatable** — `openpyxl` writes both the `CHOOSE` formulas
+and the dropdown (`openpyxl.worksheet.datavalidation.DataValidation`, type
+`list`) and it stays live in Excel. It changes the model's blue inputs into
+links, so apply it as an *extension* of the delivered workbook, not inside the
+validated single sheet. Because the active case is acyclic, a validation harness
+can re-simulate it and reconcile.
+
+> A scenario is a **coherent bundle** of inputs, not one flexed driver — an
+> upside pairs higher growth *with* better margins *and* higher capex. Give each
+> case a one-line narrative.
 
 ---
 

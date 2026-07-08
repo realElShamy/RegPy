@@ -24,22 +24,35 @@ agree on the fundamentals.
   who checks one cell has checked the row. Also: inputs separated from
   calculations, short formulas built from intermediate rows rather than one
   mega-formula, consistent time series left-to-right.
-- **ICAEW "Twenty Principles for Good Spreadsheet Practice"** — a chartered-
-  accountant checklist: agree the purpose; adopt a standard and stick to it;
-  separate inputs, calculations and outputs; use one formula per row/column; be
-  disciplined about workbook structure; build in checks; document; control
-  versions.
-- **SMART** (Mazars/Corality) — **S**tructured, **M**anageable, **A**daptable,
-  **R**obust, **T**ransparent — emphasises a clear inputs→calcs→outputs flow and
-  a "no. surprises" review culture.
-- **Operis / "The Operis Way"** and the **Institute for Financial Modelling** add
-  rigour around review, versioning and audit.
-- **Spreadsheet risk (EuSpRIG)** is why all of this matters: field studies find a
-  large share of production spreadsheets contain material errors. Structure,
-  consistency and built-in checks are the antidote — they make errors *visible*.
+- **ICAEW "Twenty Principles for Good Spreadsheet Practice"** (4th ed, 2024) — a
+  chartered-accountant checklist in three groups (Strategy & Plan, Design &
+  Build, Control & Management): agree the purpose; adopt a standard and stick to
+  it; separate inputs, calculations and outputs; use one formula per row/column;
+  be disciplined about structure; build in checks; document; control versions.
+- **ICAEW "Financial Modelling Code"** (2024) — distilled from seven house
+  methodologies (Operis, Mazars, KPMG, RSM, Grant Thornton, Modano…); principles-
+  based rather than tick-box: segregate inputs/calcs/outputs, "read like a book,"
+  one timeline per sheet, hide nothing, strictly consistent formula blocks,
+  checks plus a master check.
+- **SMART** (originated 2005 as NavigatorPF → Corality → now Forvis Mazars) —
+  **S**tructured, **M**anageable, **A**daptable, **R**obust, **T**ransparent —
+  emphasises a report-like structure (cover + contents), a clear
+  inputs→calcs→outputs flow, plain English, and powerful scenario analysis.
+- **Operis / "The Operis Way" (10 rules)** — output-first design, systematic
+  named ranges so formulas "read like sentences," and *far* more error checks
+  than a typical model; the **Institute for Financial Modelling** adds review,
+  versioning and audit rigour.
+- **Spreadsheet risk (EuSpRIG)** is why all of this matters: audited operational
+  spreadsheets very frequently contain material errors, and a single reviewer's
+  pass catches only ~60% of seeded errors — so independent review is mandatory
+  (the JPMorgan "London Whale" VaR spreadsheet and the Reinhart-Rogoff omitted-
+  SUM-range are the cautionary tales). Structure, consistency and built-in checks
+  are the antidote — they make errors *visible*.
 
 Common thread: **transparency + consistency + separation of concerns + built-in
 integrity checks**. The rest of this document is those four ideas made concrete.
+Sources: fast-standard.org · icaew.com (Twenty Principles; Financial Modelling
+Code) · financialmodelling.forvismazars.com · operis.com · eusprig.org.
 
 ---
 
@@ -68,6 +81,25 @@ typed constant, every black data cell is a formula, and cross-sheet links on the
 Cover/Checks/Dashboard are green. The Cover sheet prints the legend so the reader
 knows the code.
 
+Two honest caveats on the specifics: (1) **the blue/black/green triad is
+universal, but the exact hexes are a house convention, not a codified standard.**
+`#0000FF` is the *classic/legacy* Excel blue (this template uses it); modern
+Excel's Standard-Colors blue is the softer `#0070C0`, which many houses now
+prefer for inputs — either is fine, consistently applied. (2) **The fourth
+colour is not uniform:** Macabacus/Wall Street Prep use **red = external-workbook
+link** and **purple = an external data-provider function** (Capital IQ/FactSet/
+Bloomberg pull); some IB house styles instead use **purple = external file** and
+**red = an attention/error flag**. Pick one and document it — which is exactly
+what the Cover legend is for. Macabacus's AutoColor even carves out a distinct
+colour for a **partial input** (a hardcode buried inside a formula, `=B5*1.03`) —
+a notorious error source worth flagging.
+
+The FAST Standard goes further and distinguishes input cells by **fill and/or
+border, not font alone** (it colours by *flow*: imports blue, exports red,
+intra-sheet counter-flows grey). This template keeps the font-colour convention
+(matching the reference workbook) and uses fills for banners and status flags;
+if you adopt FAST's fill-based scheme, apply it consistently and publish the key.
+
 Cell **fills** are secondary and lighter-touch: a pale fill to mark an input
 block or a banner; the Excel *Good/Bad/Neutral* palette for status flags — green
 `#C6EFCE`/font `#006100`, red `#FFC7CE`/`#9C0006`, amber `#FFEB9C`/`#9C6500`.
@@ -79,20 +111,31 @@ message.
 Formatting changes *display*, never the stored value — never type `1.2` for
 1,200. Standard custom format strings:
 
+The custom-format structure is `Positive;Negative;Zero;Text`.
+
 | Use | Format string |
 |---|---|
 | Money, thousands, `()` negatives, dash for zero | `_-* #,##0_-;\(#,##0\)_-;_-* "-"_-;_-@` |
+| Simpler `()` negatives, dash zero, red neg | `#,##0;[Red](#,##0);"-"` |
+| **Display in thousands** (÷1,000 via one trailing comma) | `#,##0,` |
+| **Display in millions** (÷1,000,000 via two commas), "m" suffix | `#,##0.0,,"m"` |
 | Percent (1 dp) | `0.0%` |
 | Multiple / turns | `0.0"x"` |
 | Ratio | `0.00` |
+| Text without breaking math ("days") | `0.0" days"` |
 | Balance-check (signed, tight) | `0.0000_ ;\-0.0000\ ` |
-| Date | `dd-mmm-yyyy` or `mmm-yy` for headers |
+| Date | `dd-mmm-yyyy` or `mmm-yy` / `"FY"yyyy` for headers |
 | Signed delta (sensitivity axes) | `+0.0%;-0.0%` |
+| Hide a cell's raw display (data-table corner) | `;;;` |
 
 The leading `_-* ` / trailing `_-` give **hanging indentation** so figures align
 on the decimal regardless of sign, and the `"-"` shows a dash for exact zeros
-(cleaner than `0`). State **units once** in a header ("EGP '000") rather than
-repeating a currency symbol on every row.
+(cleaner than `0`). **Negatives are always parentheses, never a leading minus.**
+**Never physically divide a value by 1,000** to scale it — use comma-scaling
+(`#,##0,`) so the cell still computes and aggregates, and state **units once** in
+a header ("EGP '000") rather than repeating a currency symbol on every row.
+Rounding lives in the *format*, never in the formula (don't use "Precision as
+displayed").
 
 ### 2.3 Signs
 
@@ -256,9 +299,16 @@ techniques you apply while reviewing.
   business result deserves attention. The skill shows integrity checks in
   red/green and plausibility alerts in **amber** as a distinct "REVIEW/CLEAR"
   master, so a genuine break is never confused with a bad-but-correct outcome.
-- **Sensible tolerances.** Compare with a small tolerance (this template: ±1 unit,
-  i.e. ±$1k on $000s figures) so floating-point/rounding noise doesn't trip a
-  check, but real breaks do.
+- **Sensible tolerances, never exact equality.** Compare with `ABS(x−y) < ErrTol`
+  (this template: ±1 unit, i.e. ±$1k on $000s figures) — never `x = y`, because
+  floating-point noise (~1e-10) throws false failures. Keep the tolerance in one
+  named place (`ErrTol`) so it's tunable, and match it to the units.
+- **Also check for broken cells and missing inputs.** A model-wide
+  `SUMPRODUCT(--ISERROR(range)) = 0` catches any `#REF!`/`#DIV/0!`/`#N/A`; a
+  `COUNTBLANK(RequiredInputs) = 0` catches an un-filled assumption. And build a
+  check wherever a number can be derived two ways (net income vs the
+  retained-earnings movement, annual vs the sum of quarters) — offsetting errors
+  can leave the balance sheet balanced yet wrong.
 - **Use IFERROR sparingly and locally.** Wrap `IFERROR` only around a cell that
   can *legitimately* error (a display flag, a ratio with a possible zero
   denominator) — never blanket-wrap calculations, because that **hides real
