@@ -1,0 +1,30 @@
+{
+ "country": "Kuwait",
+ "iso2": "kw",
+ "as_of": "2026-07",
+ "currency": "KWD",
+ "units_label": "KWD '000",
+ "accounting_framework": "IFRS mandatory for all companies (Ministerial Resolution 18/1990 as amended; CBK 'higher-of' ECL modification for banks). Arabic statutory filings; MOCI audited FS due ~3 months after year end (electronic XBRL 'Qayd' filing mandatory from 2027).",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": null,
+  "basis": "Ownership/listing-dependent - no safe default. 15% income tax applies only to FOREIGN (non-GCC) corporate bodies (Decree 3/1955 as amended by Law 2/2008). Kuwaiti/GCC-owned companies pay no general CIT as of mid-2026 but owe quasi-taxes: NLST 2.5% of net profit (Boursa-listed only), Zakat 1% (Kuwaiti public/closed KSCs), KFAS 1% (different bases each)."
+ },
+ "tax_recipes": {
+  "foreign_owned": "tax_pct_ebt = 0.15 on the foreign corporate share of profits.",
+  "kuwaiti_private_unlisted": "tax_pct_ebt ~ 0.01 (Zakat, for KSCs) or 0 for other forms; disclose.",
+  "kuwaiti_listed": "tax_pct_ebt ~ 0.045 aggregate proxy (NLST 2.5% + Zakat 1% + KFAS 1% - bases differ; refine if material).",
+  "business_profits_tax_watch": "Broad 15% Business Profits Tax (KWD 1.5m revenue exemption) remains an UNENACTED draft targeted at 1 Jan 2027 - flag in long forecasts.",
+  "pillar_two": "DMTT 15% (Decree-Law 157/2024, Exec Regs MR 55/2025) for FYs from 1 Jan 2025, groups >= EUR 750m: use 0.15 if in scope."
+ },
+ "label_overrides": {},
+ "vat_note": "No VAT and no enacted excise as of mid-2026.",
+ "fiscal_year_note": "Calendar year default. KWD quotes to 3 decimals (fils); no USD peg - KWD floats against a basket.",
+ "depreciation_note": "For the 15% foreign-company tax, Executive Rule 30/2013 mandates straight-line maximum rates: buildings 4%, plant & machinery 20%, motor vehicles 15-20%, office equipment 15%.",
+ "pillar_two_note": "DMTT in force from FY2025 for large MNE groups; voluntary advance-payment mechanism per MoF Circular 1/2026.",
+ "disclosure": "Kuwait's tax line depends on ownership and listing status: 15% applies to foreign corporate ownership only; Kuwaiti companies bear NLST/Zakat/KFAS quasi-taxes on differing bases. The modeled effective rate is a proxy; the draft 15% Business Profits Tax (targeted 2027) is not reflected. Not tax advice.",
+ "sources": [
+  "https://taxsummaries.pwc.com/kuwait/corporate/taxes-on-corporate-income",
+  "https://taxsummaries.pwc.com/kuwait/corporate/other-taxes"
+ ]
+}

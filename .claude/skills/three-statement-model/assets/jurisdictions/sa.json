@@ -1,0 +1,32 @@
+{
+ "country": "Saudi Arabia",
+ "iso2": "sa",
+ "as_of": "2026-07",
+ "currency": "SAR",
+ "units_label": "SAR '000",
+ "accounting_framework": "IFRS as endorsed by SOCPA (listed companies from FY2017, all others FY2018; IFRS for SMEs endorsed as an option). Statutory ZATCA/Ministry of Commerce filings in Arabic; SOCPA maintains the official Arabic IFRS translation.",
+ "default_tax_line": {
+  "label": "Zakat and Income Tax",
+  "rate": 0.025,
+  "basis": "Default assumes a fully Saudi/GCC-owned company: Zakat approximated at 2.5% of EBT (statutory Zakat is 2.5% of the Zakat BASE for a Hijri year - a net-assets-based formula under MR 1007/2024; the profit component stays at 2.5% while the prorated ~2.5778% applies to the non-profit base component for Gregorian years; %-of-EBT is a floor-level proxy)."
+ },
+ "tax_recipes": {
+  "mixed_ownership": "Blend by ownership: tax_pct_ebt = 0.20 * foreign_share + 0.025 * saudi_gcc_share. The 20% leg is CIT on the non-Saudi/GCC share of taxable income; oil/hydrocarbon producers instead pay 50-85% tiered by capital investment.",
+  "fully_foreign": "tax_pct_ebt = 0.20 (standard CIT).",
+  "pillar_two": "No GloBE/DMTT enacted as of mid-2026 (new Income Tax Law still draft); revisit if the entity is in a >= EUR 750m group."
+ },
+ "label_overrides": {
+  "14": "Zakat & Tax Rate (% of Earnings Before Tax)",
+  "37": "Zakat and Income Tax"
+ },
+ "vat_note": "VAT 15% since July 2020 (registration threshold SAR 375,000). Not a P&L line here; AR/AP balances may be VAT-inclusive. FATOORA e-invoicing integration effectively universal since mid-2026.",
+ "fiscal_year_note": "Gregorian or Hijri fiscal years permitted; Zakat/CIT return due within 120 days of year end. SAR pegged at 3.75/USD.",
+ "depreciation_note": "Tax depreciation (Income Tax Law Art 17) uses five declining-balance pools: buildings 5%; industrial/agricultural movable assets 10%; computers/software 25%; geological survey/exploration expenses 20%; all other 10%; with the 50/50 addition-year rule.",
+ "pillar_two_note": "Not enacted as of mid-2026.",
+ "disclosure": "The 'Zakat and Income Tax' line is modeled as an effective rate on earnings before tax. Statutory Zakat is computed on the Zakat base (net-assets formula under MR 1007/2024), not on profit - the %-of-EBT treatment is a simplification that can misstate the charge for asset-heavy or leveraged entities; mixed-ownership entities owe blended Zakat + CIT. Not tax or Zakat advice.",
+ "sources": [
+  "https://taxsummaries.pwc.com/saudi-arabia/corporate/taxes-on-corporate-income",
+  "https://taxsummaries.pwc.com/saudi-arabia/corporate/other-taxes",
+  "https://zatca.gov.sa/"
+ ]
+}
