@@ -9,20 +9,28 @@ an LLM agent build equivalent models end-to-end for any company.
 | File | What it is |
 |---|---|
 | [`REVERSE_ENGINEERING.md`](REVERSE_ENGINEERING.md) | Complete tear-down of the original workbook: row map, every formula, the dependency graph, formatting system, sign conventions, checks, and the deliberate design choices (no-circularity, corkscrews, cash as the balancing item) |
-| [`PROMPT_THREE_STATEMENT_MODEL.md`](PROMPT_THREE_STATEMENT_MODEL.md) | **The main deliverable.** An end-to-end system prompt (§0–§9): role, input contract, canonical cell map, dependency-ordered build phases with exact formula templates, formatting spec, known failure modes, and a mandatory self-validation protocol |
+| [`PROMPT_THREE_STATEMENT_MODEL.md`](PROMPT_THREE_STATEMENT_MODEL.md) | **The main deliverable.** An end-to-end system prompt (ROLE + §1–§9): input contract, canonical cell map, dependency-ordered build phases with exact formula templates, formatting spec, known failure modes, and a mandatory self-validation protocol |
 | [`harness/validate_model.py`](harness/validate_model.py) | Deterministic acceptance test. Validates any generated .xlsx in three layers: structure, formula integrity (incl. column-consistency), and values against an independent Python re-implementation of the model economics. Recalculates via LibreOffice headless / cached values / `formulas` |
 | [`harness/case_study_inputs.json`](harness/case_study_inputs.json) | The CFI case study reshaped as the prompt's parameterization payload (5 historical years + 5 years of forecast assumptions) |
 | [`harness/reference_values.json`](harness/reference_values.json) | Ground truth extracted from the original workbook — every populated cell's formula and cached value — for regression testing |
+| [`examples/blind_build_model.xlsx`](examples/blind_build_model.xlsx) | The workbook produced by the blind-build test — a live demonstration of what the prompt generates |
 
 ## Verification status
 
-- The harness run against the **original CFI workbook**: **1,720 checks, 0 failures** —
+- The harness run against the **original CFI workbook**: **1,884 checks, 0 failures**
+  (structure, historical + forecast formula canon, values, tie-outs, regression) —
   proving the reverse-engineered formula canon and the independent simulation exactly
   reproduce the source model.
-- The prompt's acceptance gate is a **blind-build test**: an agent given only the prompt
-  text and the inputs JSON (never the original workbook) must produce a workbook that
-  passes the full harness, including recalculation and value regression to the cent.
-  (Latest run status is recorded in the PR conversation.)
+- The prompt passed its **blind-build acceptance gate**: an agent given only the prompt
+  text and the inputs JSON (never the original workbook) built the model end-to-end
+  (its own §8 self-validation: 1,169 assertions, 0 failures, LibreOffice recalc) and
+  the deterministic harness scores it **1,884/1,884**, including value regression
+  against the original to the cent. The produced workbook is checked in at
+  [`examples/blind_build_model.xlsx`](examples/blind_build_model.xlsx).
+- The prompt was additionally hardened by three adversarial review passes
+  (ambiguity/executability, financial correctness, template fidelity); all findings
+  were fixed, including one blocker (the historical opening-cash corkscrew was
+  under-specified) independently confirmed by the blind builder's ambiguity log.
 
 ## Usage
 

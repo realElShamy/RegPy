@@ -310,9 +310,11 @@ is explicitly required.)
    all other rows 16.
 3. Year row: bold 14. Historical year cells: fill #E7F2FF, black text. Forecast year
    cells: fill #000C3F, white text. Row-1 merged banners: matching fills, centered.
-4. Inputs blue #0000FF, formulas black (see §2). Revenue rows (label A26 and row 26
-   values) bold. Subheader label cells (A7, A29, A43, A50, A54, A65, A71, A75, A88,
-   A95, A101) bold. Subtotal/total rows are bold across label + data cells.
+4. Inputs blue #0000FF, formulas black (see §2). Bold, across label + data cells:
+   row 26 (Revenue) and the subtotal/total rows 28, 34, 35, 38, 48, 53, 57, 58, 69,
+   73, 78, 82 - exactly these; rows 80, 92, 60 and the chart-feed rows stay regular
+   weight. Subheader label cells (A7, A29, A43, A50, A54, A65, A71, A75, A88, A95,
+   A101) bold.
 5. Borders span column A through the last data column, applied to the whole row band:
    thin TOP border on subtotal rows 28, 35, 53, 92 (and row 8 in the assumptions
    block); thin BOTTOM border on row 33 (closes the expense stack); thin top +
