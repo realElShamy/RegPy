@@ -1,0 +1,27 @@
+{
+ "country": "Oman",
+ "iso2": "om",
+ "as_of": "2026-07",
+ "currency": "OMR",
+ "units_label": "OMR '000",
+ "accounting_framework": "IFRS (FSA-regulated; IFRS for SMEs permitted for qualifying small entities since the FSA's February 2025 decision). MSX-listed ESG reporting mandatory from 2025; full IFRS S1/S2 by 2029.",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": 0.15,
+  "basis": "Standard CIT 15% of taxable income (all companies incl. foreign-owned)."
+ },
+ "tax_recipes": {
+  "sme_3pct": "3% rate for qualifying SMEs: registered capital <= OMR 60,000 at the start of the tax year, gross income <= OMR 150,000, average employees <= 25 (simplified 3-month filing). Set tax_pct_ebt = 0.03 and disclose.",
+  "pillar_two": "DMTT 15% for FYs from 1 Jan 2025, groups >= EUR 750m (2-of-4 test): default rate already 15%, so usually no adjustment."
+ },
+ "label_overrides": {},
+ "vat_note": "VAT 5% since April 2021. AR/AP balances may be VAT-inclusive.",
+ "fiscal_year_note": "Calendar year default (any 12-month year permitted). OMR pegged at USD 2.6008 per OMR (~OMR 0.3845/USD); amounts quoted to 3 decimals (baisa).",
+ "depreciation_note": "Tax depreciation: buildings 4% SL (doubled for industrial use; prefabricated 15%); pooled declining-balance groups - plant/machinery/vehicles 15%, computers/heavy equipment 33.33%.",
+ "pillar_two_note": "DMTT in force from FY2025 for large MNE groups.",
+ "disclosure": "Tax modeled as 15% of earnings before tax (Oman standard CIT); the 3% SME regime and the DMTT are available as explicit overrides. Not tax advice. Statements per IFRS.",
+ "sources": [
+  "https://taxsummaries.pwc.com/oman/corporate/taxes-on-corporate-income",
+  "https://taxsummaries.pwc.com/oman/corporate/deductions"
+ ]
+}

@@ -1,0 +1,28 @@
+{
+ "country": "Egypt",
+ "iso2": "eg",
+ "as_of": "2026-07",
+ "currency": "EGP",
+ "units_label": "EGP '000",
+ "accounting_framework": "Egyptian Accounting Standards (EAS) — Arabic-language adaptation of IFRS (Decree 110/2015; 2019 amendments added EAS 47/48/49 ~ IFRS 9/15/16; PM Decree 883/2023 permits PP&E/intangibles/investment-property revaluation from Jan 2023; EAS 50 ~ IFRS 17 effective July 2024). Statutory filings are in Arabic; IFRS itself is NOT adopted. An Egyptian SME standard exists within the EAS framework.",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": 0.225,
+  "basis": "Standard CIT 22.5% of net taxable profits (Income Tax Law 91/2005), applied to EBT as an effective-rate proxy. Special rates: 40.55% oil & gas E&P; 40% Suez Canal Authority/EGPC/CBE."
+ },
+ "tax_recipes": {
+  "small_business_law_6_2025": "Turnover <= EGP 20m may elect turnover tax replacing CIT: 0.4% (<EGP 0.5m), 0.5% (0.5-2m), 0.75% (2-3m), 1.0% (3-10m), 1.5% (10-20m) of REVENUE. The template taxes EBT, so convert: tax_pct_ebt = band_rate * forecast_revenue / forecast_EBT per year, and disclose the conversion. One-off threshold breach <=20% keeps the 1.5% rate for one additional year only.",
+  "solidarity_contribution": "Universal Health Insurance solidarity contribution: 0.25% of GROSS annual revenue (Law 2/2018), historically non-deductible (deductible under the June 2026 Second Tax Facilitation Package). Material for thin-margin companies: add 0.0025 * revenue/EBT to the effective rate and disclose."
+ },
+ "label_overrides": {},
+ "vat_note": "VAT 14% standard (Law 67/2016; 5% schedule rate for production machinery; Law 157/2025 moved construction to 14%). Not a P&L line in this model - note that AR/AP balances and working-capital days may be VAT-inclusive.",
+ "fiscal_year_note": "Calendar year default; state-linked entities often report July-June (government FY). CIT return due within 4 months of year end.",
+ "depreciation_note": "Tax depreciation (Law 91/2005 Arts 25-27): buildings 5% SL; intangibles 10% SL; computers/software 50% declining-balance pool; other machinery/equipment 25% declining-balance pool; optional 30% first-year accelerated deduction on production machinery. Book (EAS) depreciation is usually straight-line - the flat effective tax rate ignores the timing differences.",
+ "pillar_two_note": "No DMTT/IIR/UTPR enacted or formally announced as of mid-2026.",
+ "disclosure": "Tax modeled as a single effective rate (22.5%) on earnings before tax under Income Tax Law 91/2005 - a modeling simplification ignoring book-tax depreciation differences, the 0.25%-of-revenue UHI solidarity contribution, and WHT mechanics; not tax advice. Statements follow EAS (IFRS-based); statutory Arabic filings govern. Employees' profit-sharing, where present, is an equity distribution under EAS, not a P&L expense.",
+ "sources": [
+  "https://taxsummaries.pwc.com/egypt/corporate/taxes-on-corporate-income",
+  "https://taxsummaries.pwc.com/egypt/corporate/deductions",
+  "https://www.ey.com/en_gl/technical/tax-alerts/egypt-introduces-tax-incentives-and-benefits-for-small-enterprises"
+ ]
+}
