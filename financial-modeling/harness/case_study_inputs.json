@@ -1,0 +1,253 @@
+{
+ "company": "CFI Case Study Co",
+ "units": "USD thousands",
+ "first_historical_year": 2020,
+ "n_historical": 5,
+ "n_forecast": 5,
+ "days_in_period": 365,
+ "historical": {
+  "revenue": [
+   102007,
+   118086,
+   131345,
+   142341,
+   150772
+  ],
+  "cogs": [
+   39023,
+   48004,
+   49123,
+   52654,
+   56710
+  ],
+  "salaries_and_benefits": [
+   26427,
+   22658,
+   23872,
+   23002,
+   25245
+  ],
+  "rent_and_overhead": [
+   10963,
+   10125,
+   10087,
+   11020,
+   11412
+  ],
+  "depreciation_amortization": [
+   19500,
+   18150,
+   17205,
+   16544,
+   16080
+  ],
+  "interest_expense": [
+   2500,
+   2500,
+   1500,
+   1500,
+   1500
+  ],
+  "taxes": [
+   1120,
+   4858,
+   8483,
+   10908,
+   11598
+  ],
+  "cash": [
+   67971,
+   81210,
+   83715,
+   111070,
+   139549
+  ],
+  "accounts_receivable": [
+   5100,
+   5904,
+   6567,
+   7117,
+   7538
+  ],
+  "inventory": [
+   7805,
+   9601,
+   9825,
+   10531,
+   11342
+  ],
+  "ppe_closing": [
+   45500,
+   42350,
+   40145,
+   38601,
+   37521
+  ],
+  "accounts_payable": [
+   3902,
+   4800,
+   4912,
+   5266,
+   5670
+  ],
+  "debt_closing": [
+   50000,
+   50000,
+   30000,
+   30000,
+   30000
+  ],
+  "equity_capital": [
+   70000,
+   70000,
+   70000,
+   70000,
+   70000
+  ],
+  "retained_earnings": [
+   2474,
+   14265,
+   35340,
+   62053,
+   90280
+  ],
+  "net_earnings_cf": [
+   2474,
+   11791,
+   21075,
+   26713,
+   28227
+  ],
+  "depreciation_cf": [
+   19500,
+   18150,
+   17205,
+   16544,
+   16080
+  ],
+  "change_in_nwc_cf": [
+   9003,
+   1702,
+   775,
+   902,
+   828
+  ],
+  "capex": [
+   15000,
+   15000,
+   15000,
+   15000,
+   15000
+  ],
+  "debt_issuance_repayment": [
+   0,
+   0,
+   -20000,
+   0,
+   0
+  ],
+  "equity_issuance_repayment": [
+   70000,
+   0,
+   0,
+   0,
+   0
+  ],
+  "opening_cash_first_year": 0,
+  "ppe_opening_first_year": 50000,
+  "debt_opening_first_year": 50000
+ },
+ "forecast_assumptions": {
+  "revenue_growth_pct": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1
+  ],
+  "cogs_pct_revenue": [
+   0.42,
+   0.47,
+   0.5,
+   0.36,
+   0.35
+  ],
+  "salaries_pct_revenue": [
+   0.17,
+   0.17,
+   0.17,
+   0.17,
+   0.17
+  ],
+  "rent_and_overhead": [
+   15000,
+   15000,
+   15000,
+   15000,
+   15000
+  ],
+  "da_pct_opening_ppe": [
+   0.35,
+   0.35,
+   0.35,
+   0.35,
+   0.35
+  ],
+  "interest_pct_avg_debt": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1
+  ],
+  "tax_pct_ebt": [
+   0.28,
+   0.28,
+   0.28,
+   0.28,
+   0.28
+  ],
+  "ar_days": [
+   18,
+   18,
+   18,
+   18,
+   18
+  ],
+  "inventory_days": [
+   80,
+   90,
+   100,
+   100,
+   100
+  ],
+  "ap_days": [
+   37,
+   37,
+   37,
+   37,
+   37
+  ],
+  "capex": [
+   15000,
+   15000,
+   15000,
+   15000,
+   15000
+  ],
+  "debt_issuance_repayment": [
+   0,
+   0,
+   -20000,
+   0,
+   0
+  ],
+  "equity_issuance_repayment": [
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}
