@@ -315,6 +315,19 @@ def recalc_workbook(path, sheet_name):
     results), else cached values, else the `formulas` package."""
     values = {}
 
+    # Know which cells are formulas up front: with data_only=True a
+    # never-recalculated formula cell reads as None, indistinguishable from an
+    # empty cell unless we check the formula view.
+    wb_formulas = openpyxl.load_workbook(path, data_only=False)
+    ws_formulas = (wb_formulas[sheet_name] if sheet_name in wb_formulas.sheetnames
+                   else wb_formulas.active)
+    formula_cells = set()
+    for row in range(2, 117):
+        for col in COLS_ALL:
+            v = ws_formulas[f"{col}{row}"].value
+            if isinstance(v, str) and v.startswith("="):
+                formula_cells.add(f"{col}{row}")
+
     def harvest(wb):
         ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.active
         out, missing = {}, 0
@@ -323,6 +336,8 @@ def recalc_workbook(path, sheet_name):
                 ref = f"{col}{row}"
                 v = ws[ref].value
                 if v is None:
+                    if ref in formula_cells:
+                        missing += 1
                     continue
                 if isinstance(v, str) and v.startswith("="):
                     missing += 1
@@ -478,12 +493,23 @@ def main():
     # Tie-outs (on recalculated values).
     for col in COLS_ALL:
         chk = values.get(f"{col}60")
-        check(chk is not None and abs(float(chk)) <= 1,
-              f"TIE-OUT: balance check {col}60 = {chk} (|x|>1)")
+        try:
+            ok = chk is not None and abs(float(chk)) <= 1
+        except (TypeError, ValueError):
+            ok = False
+        check(ok, f"TIE-OUT: balance check {col}60 = {chk} (|x|>1)")
         bs_cash, cf_cash = values.get(f"{col}44"), values.get(f"{col}82")
-        check(bs_cash is not None and cf_cash is not None
-              and abs(float(bs_cash) - float(cf_cash)) <= tol,
-              f"TIE-OUT: BS cash {col}44={bs_cash} != CFS closing cash {col}82={cf_cash}")
+        try:
+            ok = (bs_cash is not None and cf_cash is not None
+                  and abs(float(bs_cash) - float(cf_cash)) <= tol)
+        except (TypeError, ValueError):
+            ok = False
+        check(ok, f"TIE-OUT: BS cash {col}44={bs_cash} != CFS closing cash {col}82={cf_cash}")
+
+    # No Excel error string may survive anywhere in the model block.
+    for ref, v in values.items():
+        check(not (isinstance(v, str) and v.startswith("#")),
+              f"ERROR-CELL: {ref} evaluates to {v}")
 
     # --- 4. Optional regression vs reference workbook ---
     if args.reference:

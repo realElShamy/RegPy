@@ -290,7 +290,7 @@ statements; forecast statements pull UP from assumptions.
 **Phase 8 — Check flags.** Row 3, every data column:
 `=IFERROR(IF(ABS(c60)>1,"ERROR","OK"),"ERROR")`
 (The IFERROR fallback deliberately lands on "ERROR": if row 60 itself errors out -
-broken wiring, #REF! - the flag must not report OK. Note: the original the reference template template
+broken wiring, #REF! - the flag must not report OK. Note: the original reference template
 falls back to "OK" here; use "OK" only if byte-faithful replication of the original
 is explicitly required.)
 
@@ -432,5 +432,5 @@ Do not include commentary inside the workbook beyond the template's own labels.
    an *independent* recomputation of the economics — the same double-entry idea as the
    external harness. An agent that follows §8 cannot deliver an unbalanced model.
 6. **Parameterization.** Everything company-specific flows through §1; the the reference template case
-   study becomes just one payload (`harness/case_study_inputs.json`). Changing horizon
+   study becomes just one payload (`../assets/example_inputs.json`). Changing horizon
    lengths shifts the column span but not the row map.

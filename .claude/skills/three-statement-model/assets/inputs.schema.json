@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "title": "Three-Statement Model Input Contract",
- "description": "Per-company payload for scripts/build_model.py. All money values in the stated units (thousands); percentages as decimals; historical arrays oldest-first with n_historical entries; forecast arrays with n_forecast entries. Signs: issuance positive, repayment negative.",
+ "description": "Per-company payload for scripts/build_model.py. All money values in the stated units (thousands); percentages as decimals; historical arrays oldest-first with n_historical entries; forecast arrays with n_forecast entries. Signs: issuance positive, repayment negative. Constraints enforced by the scripts: n_historical >= 2; n_historical + n_forecast <= 23 (data block stays within columns D-Z); days_in_period must be 365.",
  "type": "object",
  "required": [
   "company",

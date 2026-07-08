@@ -105,12 +105,39 @@ def apply_pack_defaults(payload, pack):
     return payload
 
 
+REQUIRED_TOP = ("company", "first_historical_year", "n_historical", "n_forecast",
+                "historical", "forecast_assumptions")
+REQUIRED_HIST = ("revenue", "cogs", "salaries_and_benefits", "rent_and_overhead",
+                 "depreciation_amortization", "interest_expense", "taxes", "cash",
+                 "accounts_receivable", "inventory", "ppe_closing",
+                 "accounts_payable", "debt_closing", "equity_capital",
+                 "retained_earnings", "net_earnings_cf", "depreciation_cf",
+                 "change_in_nwc_cf", "capex", "debt_issuance_repayment",
+                 "equity_issuance_repayment", "opening_cash_first_year",
+                 "ppe_opening_first_year", "debt_opening_first_year")
+REQUIRED_FA = ("revenue_growth_pct", "cogs_pct_revenue", "salaries_pct_revenue",
+               "rent_and_overhead", "da_pct_opening_ppe", "interest_pct_avg_debt",
+               "ar_days", "inventory_days", "ap_days", "capex",
+               "debt_issuance_repayment", "equity_issuance_repayment")
+
+
 def validate_inputs(payload):
-    """§1 of the template spec: lengths + four roll-forward identities (±1)."""
-    errors = []
+    """§1 of the template spec: structure, lengths, four roll-forward
+    identities (±1). Returns (errors, warnings)."""
+    errors, warnings = [], []
+    missing = [k for k in REQUIRED_TOP if k not in payload]
+    if not missing:
+        missing += [f"historical.{k}" for k in REQUIRED_HIST
+                    if k not in payload["historical"]]
+        missing += [f"forecast_assumptions.{k}" for k in REQUIRED_FA
+                    if k not in payload["forecast_assumptions"]]
+    if missing:
+        return [f"missing required field: {k}" for k in missing], warnings
     H, F = payload["n_historical"], payload["n_forecast"]
     hist, fa = payload["historical"], payload["forecast_assumptions"]
     Y0 = payload["first_historical_year"]
+    if H < 2:
+        errors.append(f"n_historical must be >= 2, got {H}")
     if not fa.get("tax_pct_ebt"):
         errors.append("forecast_assumptions.tax_pct_ebt is missing/empty and the "
                       "jurisdiction pack provides no default rate - set it explicitly")
@@ -125,7 +152,7 @@ def validate_inputs(payload):
         if isinstance(v, list) and len(v) != F:
             errors.append(f"forecast_assumptions.{k}: {len(v)} entries, expected {F}")
     if errors:
-        return errors
+        return errors, warnings
     cash_open = hist["opening_cash_first_year"]
     ppe_open = hist["ppe_opening_first_year"]
     debt_open = hist["debt_opening_first_year"]
@@ -152,13 +179,25 @@ def validate_inputs(payload):
         if abs(debt_close - hist["debt_closing"][i]) > 1:
             errors.append(f"{yr}: debt roll {debt_close:.2f} vs {hist['debt_closing'][i]}")
         debt_open = hist["debt_closing"][i]
+        ne_is = (hist["revenue"][i] - hist["cogs"][i]
+                 - hist["salaries_and_benefits"][i] - hist["rent_and_overhead"][i]
+                 - hist["depreciation_amortization"][i]
+                 - hist["interest_expense"][i] - hist["taxes"][i])
         if i > 0:
-            ne = (hist["revenue"][i] - hist["cogs"][i] - hist["salaries_and_benefits"][i]
-                  - hist["rent_and_overhead"][i] - hist["depreciation_amortization"][i]
-                  - hist["interest_expense"][i] - hist["taxes"][i])
-            if abs(hist["retained_earnings"][i - 1] + ne - hist["retained_earnings"][i]) > 1:
+            if abs(hist["retained_earnings"][i - 1] + ne_is
+                   - hist["retained_earnings"][i]) > 1:
                 errors.append(f"{yr}: retained-earnings roll broken")
-    return errors
+        # As-reported CFS lines should agree with their IS counterparts; a
+        # large gap means the trial-balance mapping went wrong even though
+        # the cash/RE identities can still both hold.
+        if abs(hist["net_earnings_cf"][i] - ne_is) > 1:
+            warnings.append(f"{yr}: CFS net earnings {hist['net_earnings_cf'][i]} "
+                            f"differs from IS-derived {ne_is:.2f} - check mapping")
+        if abs(hist["depreciation_cf"][i]
+               - hist["depreciation_amortization"][i]) > 1:
+            warnings.append(f"{yr}: CFS depreciation differs from IS D&A - "
+                            f"check mapping")
+    return errors, warnings
 
 
 def build(payload, pack, out_path):
@@ -252,19 +291,30 @@ def build(payload, pack, out_path):
         for i, c in enumerate(FC_COLS):
             put_input(row, c, fa[key][i])
 
-    for c in HIST_COLS:
+    def hist_backcalc(row, col, expr, denominator):
+        """Historical driver back-calcs show #DIV/0! for zero-denominator
+        inputs (debt-free, no-COGS, zero-EBT years); wrap only those cells
+        in IFERROR(...,"") so the audit rows stay clean. The validator
+        accepts both forms."""
+        f = f"={expr}" if denominator else f'=IFERROR({expr},"")'
+        put_formula(row, col, f)
+
+    for i, c in enumerate(HIST_COLS):
         cl, pl = L(c), L(c - 1)
+        ebt = (hist["revenue"][i] - hist["cogs"][i]
+               - hist["salaries_and_benefits"][i] - hist["rent_and_overhead"][i]
+               - hist["depreciation_amortization"][i] - hist["interest_expense"][i])
         if c != FIRST:
-            put_formula(8, c, f"={cl}26/{pl}26-1")
-        put_formula(9, c, f"={cl}27/{cl}26")
-        put_formula(10, c, f"={cl}30/{cl}26")
+            hist_backcalc(8, c, f"{cl}26/{pl}26-1", hist["revenue"][i - 1])
+        hist_backcalc(9, c, f"{cl}27/{cl}26", hist["revenue"][i])
+        hist_backcalc(10, c, f"{cl}30/{cl}26", hist["revenue"][i])
         put_formula(11, c, f"={cl}31")
-        put_formula(12, c, f"={cl}32/{cl}47")
-        put_formula(13, c, f"={cl}33/{cl}52")
-        put_formula(14, c, f"={cl}37/{cl}35")
-        put_formula(15, c, f"={cl}45/{cl}26*365")
-        put_formula(16, c, f"={cl}46/{cl}27*365")
-        put_formula(17, c, f"={cl}51/{cl}27*365")
+        hist_backcalc(12, c, f"{cl}32/{cl}47", hist["ppe_closing"][i])
+        hist_backcalc(13, c, f"{cl}33/{cl}52", hist["debt_closing"][i])
+        hist_backcalc(14, c, f"{cl}37/{cl}35", ebt)
+        hist_backcalc(15, c, f"{cl}45/{cl}26*365", hist["revenue"][i])
+        hist_backcalc(16, c, f"{cl}46/{cl}27*365", hist["cogs"][i])
+        hist_backcalc(17, c, f"{cl}51/{cl}27*365", hist["cogs"][i])
         put_formula(18, c, f"={cl}72")
         put_formula(19, c, f"={cl}76")
         put_formula(20, c, f"={cl}77")
@@ -474,7 +524,9 @@ def main():
     pack = json.load(open(args.jurisdiction)) if args.jurisdiction else None
     payload = apply_pack_defaults(payload, pack)
 
-    errors = validate_inputs(payload)
+    errors, warnings = validate_inputs(payload)
+    for w in warnings:
+        print("  ⚠", w)
     if errors:
         print("INPUT VALIDATION FAILED:")
         for e in errors:

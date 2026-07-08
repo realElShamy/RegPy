@@ -290,7 +290,7 @@ statements; forecast statements pull UP from assumptions.
 **Phase 8 — Check flags.** Row 3, every data column:
 `=IFERROR(IF(ABS(c60)>1,"ERROR","OK"),"ERROR")`
 (The IFERROR fallback deliberately lands on "ERROR": if row 60 itself errors out -
-broken wiring, #REF! - the flag must not report OK. Note: the original the reference template template
+broken wiring, #REF! - the flag must not report OK. Note: the original reference template
 falls back to "OK" here; use "OK" only if byte-faithful replication of the original
 is explicitly required.)
 

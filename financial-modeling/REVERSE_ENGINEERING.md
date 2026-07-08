@@ -184,7 +184,7 @@ forecast columns are **hardcoded blue inputs** that *drive* the statements.
 ┌──────────────────────┐   └──────────┬───────────┘ │
 │ CASH FLOW STATEMENT  │              ▼             │
 │ NE + D&A − ΔNWC = CFO│   Check row 60 = (L&E − A) │
-│ − Capex (the template provider)        │   Row 3 flag OK/ERROR      │
+│ − Capex (investing)    │   Row 3 flag OK/ERROR      │
 │ + Debt/Equity (CFF)  │                            │
 │ → Net Δ cash         │                            │
 │ open + Δ = closing ──┴────────────────────────────┘
@@ -232,7 +232,7 @@ it strictly — every blue cell is a typed constant, every black data cell is a 
 
 1. **Capex is displayed positive.** Row 72 "Investments in PP&E" = +15,000 and row 73
    "Cash from Investing" = `SUM(D72)` is **positive**; the outflow happens in row 80:
-   `Net Δ Cash = CFO − the template provider + CFF`. The chart block then re-negates it (`=-D73`) so the
+   `Net Δ Cash = CFO − Cash from Investing + CFF`. The chart block then re-negates it (`=-D73`) so the
    stacked chart shows investing below zero.
 2. **ΔNWC is subtracted** ("Less: Changes in Working Capital"): CFO = NE + D&A − ΔNWC.
    An *increase* in NWC consumes cash.
@@ -255,7 +255,7 @@ it strictly — every blue cell is a typed constant, every black data cell is a 
 1. **No circular reference.** Interest is charged on the *average* of opening and closing
    debt, which usually creates circularity (interest → net income → cash → revolver →
    debt → interest). Here debt movements are **exogenous inputs** (a term-debt schedule,
-   no revolver, no cash sweep), so the loop never closes. the template provider's comment on A102 makes
+   no revolver, no cash sweep), so the loop never closes. The template author's comment on A102 makes
    this explicit. Cash simply accumulates.
 2. **Corkscrew (roll-forward) schedules** for PP&E, debt, equity capital, retained
    earnings, and cash: `closing = opening + additions − reductions`, with each year's
@@ -275,14 +275,14 @@ it strictly — every blue cell is a typed constant, every black data cell is a 
 
 ## 8. How the design squares with published methodology
 
-Web research (the template provider's own guides plus industry modeling standards) corroborates every
+Web research (the template author's own guides plus industry modeling standards) corroborates every
 structural choice observed in the file:
 
 - **Build order.** The provider's published sequence — historicals → historical ratios → forecast
   assumptions → income statement down to EBITDA → supporting schedules → wire D&A and
   interest back into the IS → balance sheet except cash → cash flow statement → closing
   cash into the BS — is exactly the dependency order embedded in this workbook's wiring
-  (provider's "3-Statement Model" guide).
+  (the author's published "3-Statement Model" guide).
 - **Single sheet on purpose.** The provider "strongly recommends" the single-worksheet layout so
   every period lives in one column across all stacked sections, reducing mis-linking —
   this file follows that recommendation literally.

@@ -13,7 +13,10 @@ choosing defensible forecast assumptions, running the scripts, and delivering th
 result with honest disclosures. Never hand-write the workbook cell by cell and never
 skip validation.
 
-All paths below are relative to this skill's directory.
+All paths below are relative to this skill's directory. Do your work (payloads,
+built workbooks, logs) in a scratch/output directory OUTSIDE the skill folder —
+skill directories are often read-only and must not be polluted; invoke `scripts/`
+and reference `assets/` by absolute path.
 
 ## Pipeline (follow in order; each stage gates the next)
 
@@ -38,11 +41,18 @@ confirm these five parameters in ONE compact question round, not a drip of quest
    the effective rate per JURISDICTIONS.md and put it in the payload's
    `tax_pct_ebt` explicitly — the pack default only applies when you leave
    `tax_pct_ebt` empty.
-5. Set `units_label`-consistent units in the payload (`"EGP thousands"` etc.).
+5. Set the payload's `units` (e.g. `"EGP thousands"`) AND, whenever the currency
+   or scale differs from the pack's `units_label` (always the case for the `intl`
+   pack outside USD, or for millions presentation), set the payload's
+   `units_label` (e.g. `"EGP m"`, `"USD '000"`) — it overrides the pack's label
+   on the workbook's unit-suffixed rows in both scripts.
 
 ### Stage 2 — Acquire historical data
-Follow `references/DATA_SOURCES.md`. Probe MCP connectors with ToolSearch first
-(accounting systems → files/drives → manual entry as fallback). Build the historical
+Follow `references/DATA_SOURCES.md`. Discover what's connected before assuming:
+use the harness's tool-discovery mechanism if it has one (e.g. ToolSearch in
+Claude Code), otherwise scan the available tool list for accounting/ERP, drive,
+and file connectors (accounting systems → files/drives → manual entry as
+fallback). Build the historical
 arrays of the input contract (`assets/inputs.schema.json`), folding real trial
 balances into the template's line items per the playbook's mapping rules, and record
 every mapping judgement for the final report.
@@ -84,9 +94,13 @@ python3 scripts/validate_model.py MODEL.xlsx --inputs INPUTS.json \
 ```
 Exit code 0 required. The harness re-derives every number with an independent
 simulation, checks the formula canon and cross-column consistency, and recalculates
-the workbook (LibreOffice headless if available, else the `formulas` package, else
-cached values). If it fails, read the failure list, fix the payload or report the
-data problem — do not edit the workbook by hand and do not deliver a failing model.
+the workbook — this REQUIRES either LibreOffice headless (`soffice`) or the Python
+`formulas` package; if neither is installed, install one (`pip install formulas`
+is the lightweight option) before validating. If validation fails, read the
+failure list and fix the payload/mapping or report the data problem — do not edit
+the workbook by hand and do not deliver a failing model. If the recalculation
+method reported is `cached-partial`, the computed values were NOT verified —
+treat that as a failure, not a pass.
 
 ### Stage 6 — Deliver
 Send the workbook to the user (and to a connected drive if they want it filed).

@@ -3,7 +3,7 @@
 Acceptance-test harness for single-sheet 3-statement models built to the reference template.
 
 Validates a generated .xlsx against the specification in
-PROMPT_THREE_STATEMENT_MODEL.md, in three layers:
+references/TEMPLATE_SPEC.md, in three layers:
 
   1. STRUCTURE  - sheet name, row labels, year headers, sections.
   2. FORMULAS   - forecast block must be formulas (no hardcoded plugs),
@@ -319,6 +319,19 @@ def recalc_workbook(path, sheet_name):
     results), else cached values, else the `formulas` package."""
     values = {}
 
+    # Know which cells are formulas up front: with data_only=True a
+    # never-recalculated formula cell reads as None, indistinguishable from an
+    # empty cell unless we check the formula view.
+    wb_formulas = openpyxl.load_workbook(path, data_only=False)
+    ws_formulas = (wb_formulas[sheet_name] if sheet_name in wb_formulas.sheetnames
+                   else wb_formulas.active)
+    formula_cells = set()
+    for row in range(2, 117):
+        for col in COLS_ALL:
+            v = ws_formulas[f"{col}{row}"].value
+            if isinstance(v, str) and v.startswith("="):
+                formula_cells.add(f"{col}{row}")
+
     def harvest(wb):
         ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.active
         out, missing = {}, 0
@@ -327,6 +340,8 @@ def recalc_workbook(path, sheet_name):
                 ref = f"{col}{row}"
                 v = ws[ref].value
                 if v is None:
+                    if ref in formula_cells:
+                        missing += 1
                     continue
                 if isinstance(v, str) and v.startswith("="):
                     missing += 1
@@ -357,6 +372,8 @@ def recalc_workbook(path, sheet_name):
     if values and missing == 0:
         return values, "cached"
 
+    # Cached values are absent/incomplete (freshly built workbook, no Excel/
+    # LibreOffice save). Evaluate with the pure-Python `formulas` package.
     try:
         import formulas  # noqa
         xl = formulas.ExcelModel().loads(path).finish()
@@ -374,6 +391,9 @@ def recalc_workbook(path, sheet_name):
     except Exception as e:
         print(f"  (formulas fallback failed: {e})")
 
+    print("WARNING: no recalculation engine succeeded (LibreOffice unavailable "
+          "and the 'formulas' package failed) - computed cells cannot be "
+          "verified. Install LibreOffice or `pip install formulas`.")
     return values, "cached-partial"
 
 
@@ -467,11 +487,20 @@ def main():
         check(norm(got) == want,
               f"FORMULA: {first_fc}{row} expected {want}, got {norm(got) if isinstance(got, str) else got!r}")
     # 2c-bis. Canonical historical formulas (2nd historical column onward).
+    def strip_iferror(f):
+        """Builder wraps zero-denominator historical back-calcs in
+        IFERROR(expr,"") - compare against the inner expression."""
+        if isinstance(f, str):
+            m = re.match(r'^=IFERROR\((.+),""\)$', f)
+            if m:
+                return "=" + m.group(1)
+        return f
+
     for col in COLS_HIST[1:]:
         pcol = get_column_letter(openpyxl.utils.column_index_from_string(col) - 1)
         for row, tpl in CANONICAL_HIST.items():
             want = norm(tpl.format(c=col, p=pcol))
-            got = ws[f"{col}{row}"].value
+            got = strip_iferror(ws[f"{col}{row}"].value)
             check(norm(got) == want,
                   f"FORMULA: {col}{row} expected {want}, got {norm(got) if isinstance(got, str) else got!r}")
     # 2d. Column consistency: each subsequent forecast formula must be the
@@ -505,12 +534,23 @@ def main():
     # Tie-outs (on recalculated values).
     for col in COLS_ALL:
         chk = values.get(f"{col}60")
-        check(chk is not None and abs(float(chk)) <= 1,
-              f"TIE-OUT: balance check {col}60 = {chk} (|x|>1)")
+        try:
+            ok = chk is not None and abs(float(chk)) <= 1
+        except (TypeError, ValueError):
+            ok = False
+        check(ok, f"TIE-OUT: balance check {col}60 = {chk} (|x|>1)")
         bs_cash, cf_cash = values.get(f"{col}44"), values.get(f"{col}82")
-        check(bs_cash is not None and cf_cash is not None
-              and abs(float(bs_cash) - float(cf_cash)) <= tol,
-              f"TIE-OUT: BS cash {col}44={bs_cash} != CFS closing cash {col}82={cf_cash}")
+        try:
+            ok = (bs_cash is not None and cf_cash is not None
+                  and abs(float(bs_cash) - float(cf_cash)) <= tol)
+        except (TypeError, ValueError):
+            ok = False
+        check(ok, f"TIE-OUT: BS cash {col}44={bs_cash} != CFS closing cash {col}82={cf_cash}")
+
+    # No Excel error string may survive anywhere in the model block.
+    for ref, v in values.items():
+        check(not (isinstance(v, str) and v.startswith("#")),
+              f"ERROR-CELL: {ref} evaluates to {v}")
 
     # --- 4. Optional regression vs reference workbook ---
     if args.reference:

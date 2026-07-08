@@ -1,8 +1,10 @@
 # Data-Source Playbook — filling the input contract from whatever is connected
 
-The skill adapts to the session's MCP connections. Probe with ToolSearch before
-assuming anything is or isn't available; never tell the user a source is unsupported
-without searching first. Priority order: (1) a connected accounting system, (2) files
+The skill adapts to whatever the session has connected. Tool names below are
+EXAMPLES from one harness (Claude Code MCP naming, `mcp__<server>__<tool>`) — in a
+different harness, find the equivalents: use its tool-discovery mechanism if one
+exists, otherwise scan the tool list for accounting/ERP/drive connectors. Never
+tell the user a source is unsupported without checking first. Priority order: (1) a connected accounting system, (2) files
 the user uploaded or pointed to, (3) cloud drives, (4) manual entry.
 
 Whatever the source, the target is always the same payload
@@ -12,7 +14,7 @@ vs Salaries vs Rent, what counts as debt) — the build report must disclose the
 
 ## 1. Accounting-system MCP connectors
 
-### Zoho Books (tools named `mcp__*Zoho*Books*` / `ZohoBooks_*`)
+### Zoho Books (e.g. tools named `mcp__*Zoho*Books*` / `ZohoBooks_*`)
 - `list_organizations` / `get_organization` → company name, **country (drives the
   jurisdiction pack)**, base currency, fiscal year start.
 - `list_chart_of_accounts` → map account types: income → revenue; cost_of_goods_sold →
@@ -37,8 +39,8 @@ growth) but never historicals — say so rather than improvising.
 - Uploaded .xlsx/.csv financial statements: parse with openpyxl/pandas. If the file
   is itself a statement export, map lines to the contract; if it's a prior model,
   extract the historical columns only.
-- Google Drive (`mcp__Google_Drive__search_files` / `read_file_content`) and
-  SharePoint (`mcp__ms365__sharepoint_*`): search for "financial statements",
+- Google Drive (e.g. `mcp__Google_Drive__search_files` / `read_file_content`) and
+  SharePoint (e.g. `mcp__ms365__sharepoint_*`): search for "financial statements",
   "trial balance", "management accounts", audit-report exports; download and parse.
 - PDFs of audited statements: read the IS/BS/CFS pages; transcribe the needed lines.
 
@@ -72,7 +74,8 @@ The template's world is deliberately small: 4 asset lines, 2 liability lines,
   re-derive the three lines from the identity instead, and disclose.
 
 ## Delivery (after build + validation)
-- Always: send the .xlsx to the user (SendUserFile or the harness equivalent).
+- Always: send the .xlsx to the user via the harness's file-delivery mechanism
+  (e.g. SendUserFile in Claude Code, an attachment API, or a shared path).
 - If a cloud drive is connected and the user wants it filed: upload/create there.
 - Summarize: forecast net earnings + closing cash by year, the drivers used, the
   jurisdiction pack applied (tax basis + caveats), and all mapping disclosures.
