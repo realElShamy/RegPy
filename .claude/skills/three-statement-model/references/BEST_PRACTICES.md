@@ -34,10 +34,10 @@ agree on the fundamentals.
   based rather than tick-box: segregate inputs/calcs/outputs, "read like a book,"
   one timeline per sheet, hide nothing, strictly consistent formula blocks,
   checks plus a master check.
-- **SMART** (originated 2005 as NavigatorPF → Corality → now Forvis Mazars) —
-  **S**tructured, **M**anageable, **A**daptable, **R**obust, **T**ransparent —
-  emphasises a report-like structure (cover + contents), a clear
-  inputs→calcs→outputs flow, plain English, and powerful scenario analysis.
+- **SMART** modelling (originated 2005 as NavigatorPF → Corality → now Forvis
+  Mazars) — a set of guidelines emphasising a report-like structure (cover +
+  contents), a clear inputs→calcs→outputs flow, professional presentation, plain
+  English, and powerful scenario analysis.
 - **Operis / "The Operis Way" (10 rules)** — output-first design, systematic
   named ranges so formulas "read like sentences," and *far* more error checks
   than a typical model; the **Institute for Financial Modelling** adds review,
@@ -318,7 +318,11 @@ techniques you apply while reviewing.
   rate, a `1.1` growth factor) is an invisible input. Put it in a blue input cell
   and reference it. (The template documents its five permitted literals — `1` in
   `(1+growth)`, `-1`/`+1` in the year and back-calc rows, the `1` check threshold,
-  and `365` — and the validator enforces the list.)
+  and `365`; the validator's formula-canon check requires each forecast/historical
+  row to match its exact canonical formula, which contains only those literals —
+  a stray hardcode would change the formula and fail the check. The blanket
+  "no literal except these five" sweep itself is a self-review step in
+  `TEMPLATE_SPEC.md` §8.5, not an automated assertion.)
 
 ### 5.2 Audit / review techniques
 
@@ -356,7 +360,7 @@ When reviewing (yours or someone else's model):
 | Named ranges for key outputs | `add_named_ranges` |
 | Integrity checks aggregated to one master light | `build_workbook.py` `build_checks` (15 tie-outs) |
 | Errors vs plausibility alerts separated | Checks sheet red/green vs amber |
-| Limited, local IFERROR; no hidden hardcodes | template design; validator's formula-hygiene sweep |
+| Limited, local IFERROR; no hidden hardcodes | template design; validator's formula-canon check |
 | Independent re-derivation + real-engine recalc | `validate_model.py`, `validate_workbook.py` |
 | Dashboards & advanced charts | `DASHBOARD.md` |
 | Scenarios & sensitivity | `SENSITIVITY.md` |

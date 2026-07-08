@@ -49,6 +49,7 @@ from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.chart.series import SeriesLabel
 from openpyxl.chart.data_source import StrRef
 from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.chart.marker import DataPoint
 from openpyxl.drawing.line import LineProperties
 
 from build_model import (populate_model_sheet, validate_inputs,
@@ -136,16 +137,29 @@ def hairline(ws, row, c0, c1, side="bottom"):
         ws.cell(row=row, column=col).border = b
 
 
+def _rgb(color):
+    """Strip a leading FF alpha so 'FF2E7D32' -> '2E7D32' for chart fills."""
+    return color[2:] if isinstance(color, str) and color.startswith("FF") and len(color) == 8 else color
+
+
 def series_fill(s, color=None, no_fill=False, line_color=None, line_width=None):
     gp = GraphicalProperties()
     if no_fill:
         gp.noFill = True
     elif color:
-        gp.solidFill = color[2:] if color.startswith("FF") and len(color) == 8 else color
+        gp.solidFill = _rgb(color)
     if line_color or line_width:
-        gp.line = LineProperties(solidFill=(line_color[2:] if line_color else None),
+        gp.line = LineProperties(solidFill=(_rgb(line_color) if line_color else None),
                                  w=line_width)
     s.graphicalProperties = gp
+
+
+def point_colors(series, colors):
+    """Colour each data point of a series individually (waterfall step colours)."""
+    for i, color in enumerate(colors):
+        dp = DataPoint(idx=i)
+        dp.graphicalProperties = GraphicalProperties(solidFill=_rgb(color))
+        series.data_points.append(dp)
 
 
 # ======================================================================
@@ -341,7 +355,11 @@ def build_cover(wb, payload, pack, geo, prepared_by, units_label):
         ("='Sheet'!A1", F_LINK, "Green = a link that pulls from another sheet"),
     ]
     for sample, fnt, meaning in legend:
-        put(ws, f"B{r}", sample, fnt, align=LEFT)
+        cell = put(ws, f"B{r}", sample, fnt, align=LEFT)
+        # These are illustrative TEXT samples, not live formulas — force the
+        # string type so a leading '=' isn't evaluated (='Sheet'!A1 -> #REF!).
+        if isinstance(sample, str) and sample.startswith("="):
+            cell.data_type = "s"
         put(ws, f"C{r}", meaning, F_BODY, align=LEFT)
         ws.merge_cells(f"C{r}:F{r}")
         r += 1
@@ -603,7 +621,8 @@ def build_dashboard(wb, payload, geo, units_label):
     ebitda = f"({m(35)}+{m(33)}+{m(32)})"
     cards = [
         ("Revenue", f"={m(26)}", NUM_FMT,
-         f"=(({m(26)})/({M(geo.prev_fc1 + '26')}))^(1/{geo.F})-1", "\"CAGR \"0.0%"),
+         f"=IFERROR((({m(26)})/({M(geo.prev_fc1 + '26')}))^(1/{geo.F})-1,\"n/a\")",
+         "\"CAGR \"0.0%"),
         ("Gross margin", f"=IFERROR({m(28)}/{m(26)},\"n/a\")", "0.0%", None, None),
         ("EBITDA", f"={ebitda}", NUM_FMT,
          f"=IFERROR({ebitda}/{m(26)},\"n/a\")", "\"margin \"0.0%"),
@@ -754,24 +773,24 @@ def build_dashboard(wb, payload, geo, units_label):
     wf_top = year_row + len(series_defs) + 3
     cf_rows = _waterfall_block(
         ws, wf_top, "Cash-flow waterfall ({})".format(geo.last_year),
-        [("Opening cash", None, "total", M(lc + "81")),
-         ("Operating", M(lc + "69"), "delta", None),
-         ("Investing", "-" + M(lc + "73"), "delta", None),
-         ("Financing", M(lc + "78"), "delta", None),
-         ("Closing cash", None, "total", M(lc + "82"))])
+        [("Opening cash", None, M(lc + "81"), None),
+         ("Operating", M(lc + "69"), None, "up"),
+         ("Investing", "-" + M(lc + "73"), None, "down"),
+         ("Financing", M(lc + "78"), None, "up"),
+         ("Closing cash", None, M(lc + "82"), None)])
     _waterfall_chart(ws, "B58", "Cash-flow waterfall ({})".format(geo.last_year), cf_rows)
 
-    pf_top = wf_top + 9
+    pf_top = wf_top + 10
     pf_rows = _waterfall_block(
         ws, pf_top, "Profit waterfall ({})".format(geo.last_year),
-        [("Revenue", None, "total", M(lc + "26")),
-         ("COGS", "-" + M(lc + "27"), "delta", None),
-         ("Salaries", "-" + M(lc + "30"), "delta", None),
-         ("Rent & OH", "-" + M(lc + "31"), "delta", None),
-         ("D&A", "-" + M(lc + "32"), "delta", None),
-         ("Interest", "-" + M(lc + "33"), "delta", None),
-         ("Tax", "-" + M(lc + "37"), "delta", None),
-         ("Net earnings", None, "total", M(lc + "38"))])
+        [("Revenue", None, M(lc + "26"), None),
+         ("COGS", "-" + M(lc + "27"), None, "down"),
+         ("Salaries", "-" + M(lc + "30"), None, "down"),
+         ("Rent & OH", "-" + M(lc + "31"), None, "down"),
+         ("D&A", "-" + M(lc + "32"), None, "down"),
+         ("Interest", "-" + M(lc + "33"), None, "down"),
+         ("Tax", "-" + M(lc + "37"), None, "down"),
+         ("Net earnings", None, M(lc + "38"), None)])
     _waterfall_chart(ws, "K58", "Profit waterfall ({})".format(geo.last_year), pf_rows)
 
     # group the data + waterfall helper rows so the dashboard stays clean
@@ -783,34 +802,44 @@ def build_dashboard(wb, payload, geo, units_label):
 
 
 def _waterfall_block(ws, top, title, steps):
-    """Write a live waterfall helper table. Columns: A=step label, B=base,
-    C=increase, D=decrease, E=total, F=cumulative. Returns row bookkeeping for
-    the chart + validator."""
+    """Write a live waterfall helper table that renders correctly even when the
+    running total crosses zero (loss years / negative cash) — the plain
+    invisible-base trick breaks there because a stacked column draws negative and
+    positive segments independently around the axis. Each floating bar [lo, hi]
+    is split at the axis into two stacks: base_above (invisible) + above (visible)
+    rise from 0 to hi, base_below (invisible) + below (visible) fall from 0 to lo,
+    so a bar spanning negative→positive shows as two same-coloured segments
+    meeting at zero. Columns A=label B=cumulative C=lo D=hi E=base_above F=above
+    G=base_below H=below. Returns row bookkeeping + per-step colours."""
     put(ws, f"A{top}", title, F_NOTE)
     hdr = top + 1
-    for j, h in enumerate(["Step", "Base", "Up", "Down", "Total", "Cumulative"]):
+    for j, h in enumerate(["Step", "Cumul.", "Lo", "Hi", "BaseUp", "Up",
+                           "BaseDn", "Dn"]):
         put(ws, f"{L(1 + j)}{hdr}", h, F_NOTE)
     first = hdr + 1
-    rows = []
-    for k, (label, delta, kind, total) in enumerate(steps):
+    rows, colors = [], []
+    for k, (label, delta, total, direction) in enumerate(steps):
         r = first + k
         rows.append(r)
         put(ws, f"A{r}", label, F_NOTE)
-        if kind == "total":
-            put(ws, f"B{r}", 0, F_NOTE, fmt=NUM_FMT)                    # base
-            put(ws, f"C{r}", 0, F_NOTE, fmt=NUM_FMT)                    # up
-            put(ws, f"D{r}", 0, F_NOTE, fmt=NUM_FMT)                    # down
-            put(ws, f"E{r}", f"={total}", F_LINK, fmt=NUM_FMT)         # total
-            put(ws, f"F{r}", f"={total}", F_NOTE, fmt=NUM_FMT)         # cumulative
-        else:
-            prev_cum = f"F{r - 1}"
-            put(ws, f"F{r}", f"={prev_cum}+({delta})", F_NOTE, fmt=NUM_FMT)
-            put(ws, f"B{r}", f"=MIN({prev_cum},F{r})", F_NOTE, fmt=NUM_FMT)
-            put(ws, f"C{r}", f"=MAX(({delta}),0)", F_NOTE, fmt=NUM_FMT)
-            put(ws, f"D{r}", f"=MAX(-({delta}),0)", F_NOTE, fmt=NUM_FMT)
-            put(ws, f"E{r}", 0, F_NOTE, fmt=NUM_FMT)
+        if total is not None:                        # anchored total bar (0..V)
+            put(ws, f"B{r}", f"={total}", F_LINK, fmt=NUM_FMT)
+            put(ws, f"C{r}", f"=MIN(0,B{r})", F_NOTE, fmt=NUM_FMT)
+            put(ws, f"D{r}", f"=MAX(0,B{r})", F_NOTE, fmt=NUM_FMT)
+            colors.append(TOTAL)
+        else:                                        # floating step bar
+            p = f"B{r - 1}"
+            put(ws, f"B{r}", f"={p}+({delta})", F_NOTE, fmt=NUM_FMT)
+            put(ws, f"C{r}", f"=MIN({p},B{r})", F_NOTE, fmt=NUM_FMT)
+            put(ws, f"D{r}", f"=MAX({p},B{r})", F_NOTE, fmt=NUM_FMT)
+            colors.append(RISE if direction == "up" else FALL)
+        put(ws, f"E{r}", f"=MAX(C{r},0)", F_NOTE, fmt=NUM_FMT)              # base_above
+        put(ws, f"F{r}", f"=MAX(D{r},0)-MAX(C{r},0)", F_NOTE, fmt=NUM_FMT)  # above
+        put(ws, f"G{r}", f"=MIN(D{r},0)", F_NOTE, fmt=NUM_FMT)              # base_below
+        put(ws, f"H{r}", f"=MIN(C{r},0)-MIN(D{r},0)", F_NOTE, fmt=NUM_FMT)  # below
     return {"first": first, "last": rows[-1], "last_row": rows[-1],
-            "cat_col": 1, "base": 2, "up": 3, "down": 4, "total": 5}
+            "cat_col": 1, "base_above": 5, "above": 6, "base_below": 7,
+            "below": 8, "colors": colors}
 
 
 def _waterfall_chart(ws, anchor, title, rr):
@@ -820,13 +849,18 @@ def _waterfall_chart(ws, anchor, title, rr):
     ch.height, ch.width = 7.4, 15.5
     cats = Reference(ws, min_col=rr["cat_col"], max_col=rr["cat_col"],
                      min_row=rr["first"], max_row=rr["last"])
-    specs = [(rr["base"], None, True), (rr["up"], RISE, False),
-             (rr["down"], FALL, False), (rr["total"], TOTAL, False)]
-    for col, color, invisible in specs:
+    # invisible base then visible on each side of the axis; the two visible
+    # series carry per-step colours so each bar reads as one colour.
+    specs = [(rr["base_above"], True), (rr["above"], False),
+             (rr["base_below"], True), (rr["below"], False)]
+    for col, invisible in specs:
         ref = Reference(ws, min_col=col, max_col=col, min_row=rr["first"], max_row=rr["last"])
         ch.add_data(ref, titles_from_data=False, from_rows=False)
         s = ch.series[-1]
-        series_fill(s, color, no_fill=invisible)
+        if invisible:
+            series_fill(s, no_fill=True)
+        else:
+            point_colors(s, rr["colors"])
     ch.set_categories(cats)
     ch.legend = None
     ws.add_chart(ch, anchor)
@@ -949,7 +983,10 @@ def _grid(ws, top, grid, row_steps, col_steps, corner, placements, pct_axis=True
 
 
 def _tornado(ws, top, tornado, base, placements):
-    # helper table: label | low-base (neg) | high-base (pos)
+    # helper table: label | low-base (neg) | high-base (pos).
+    # A horizontal bar chart renders category 0 at the BOTTOM, so write the
+    # widest-swing driver LAST to put it on top (the classic tornado funnel).
+    tornado = list(reversed(tornado))
     put(ws, f"A{top}", "Driver", F_NOTE)
     put(ws, f"B{top}", "Down", F_NOTE)
     put(ws, f"C{top}", "Up", F_NOTE)
@@ -1039,6 +1076,7 @@ def build_full(payload, pack, out_path, prepared_by=None):
     wb.properties.creator = "three-statement-model skill"
     populate_model_sheet(model_ws, payload, pack)
     polish_model_sheet(model_ws, geo)
+    model_ws.sheet_properties.tabColor = ACCENT
 
     sens = compute_sensitivity(payload, pack)
 

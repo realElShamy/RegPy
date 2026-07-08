@@ -69,19 +69,20 @@ blue `#0072B2`, orange `#E69F00`, vermillion `#D55E00`, bluish-green `#009E73`.
 
 ---
 
-## 3. The KPI tile row
+## 3. The KPI tiles
 
-Nine tiles across the top, each a small card (title / big value / sub-metric):
-Revenue (+ revenue CAGR), Gross margin, EBITDA (+ margin), Net earnings (+
-margin), Closing cash, Total assets, Return on equity, Current ratio, Net debt /
-EBITDA. All are **cross-sheet formulas** on the final forecast year, e.g.
+Nine tiles laid out as a **3×3 grid** at the top, each a small card (title / big
+value / sub-metric), reading left-to-right then top-to-bottom in order of
+importance (top-line → profitability → liquidity → returns → leverage): Revenue
+(+ revenue CAGR), Gross margin, EBITDA (+ margin); Net earnings (+ margin),
+Closing cash, Total assets; Return on equity, Current ratio, Net debt / EBITDA.
+All are **cross-sheet formulas** on the final forecast year, e.g.
 `='Three Statement Model'!<lastcol>38` for net earnings, with EBITDA rebuilt as
 `EBT + interest + D&A`. Ratios are wrapped in `IFERROR(...,"n/a")` so a
 zero-denominator company (no debt, no equity) shows "n/a" rather than `#DIV/0!`.
 
 Tile design: left-aligned, generous whitespace, one strong navy number, a muted
-grey sub-metric. Group them on one row so the eye scans left-to-right in order of
-importance (top-line → profitability → liquidity → returns → leverage).
+grey sub-metric, and a consistent card fill so the grid reads as one block.
 
 ---
 

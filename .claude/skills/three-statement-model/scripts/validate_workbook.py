@@ -29,6 +29,7 @@ Usage:
 Exit code 0 = all layers pass, 1 = failures (report printed).
 """
 import argparse
+import copy
 import json
 import os
 import re
@@ -40,7 +41,8 @@ import openpyxl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_model import apply_pack_defaults
-from build_workbook import build_full, Geo, MODEL
+from build_workbook import (build_full, Geo, MODEL, SCENARIOS, GRID_STEPS,
+                            INT_STEPS, TORNADO_DRIVERS)
 from validate_model import simulate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -99,6 +101,42 @@ def expected_alert(sim, n):
         if gm < 0 or gm > 1:
             return "REVIEW"
     return "CLEAR"
+
+
+def indep_sensitivity(inputs, pack):
+    """A SECOND, validator-owned computation of the sensitivity outputs — it
+    re-applies the documented perturbations (imported spec constants) to
+    simulate() with its own code, so a bug in build_workbook's own
+    compute_sensitivity/perturbed_inputs is caught rather than reproduced. This
+    is the independent oracle the SENS layer compares the builder against."""
+    nh = inputs["n_historical"]
+
+    def out(changes):
+        inp = apply_pack_defaults(copy.deepcopy(inputs), pack)
+        fa = inp["forecast_assumptions"]
+        for key, delta, mode in changes:
+            fa[key] = [(v + delta if mode == "add" else v * (1 + delta))
+                       for v in fa[key]]
+        s = simulate(inp)
+        m = len(s[26]) - 1
+        ebitda = s[35][m] + s[33][m] + s[32][m]
+        return {"revenue": s[26][m], "ebitda": ebitda, "net_earnings": s[38][m],
+                "closing_cash": s[82][m], "min_fc_cash": min(s[82][nh:])}
+
+    scenarios = {name: out(ch) for name, ch in SCENARIOS}
+    grid_ne = [[out([("revenue_growth_pct", g, "add"),
+                     ("cogs_pct_revenue", c, "add")])["net_earnings"]
+                for c in GRID_STEPS] for g in GRID_STEPS]
+    grid_cash = [[out([("revenue_growth_pct", g, "add"),
+                       ("interest_pct_avg_debt", it, "add")])["min_fc_cash"]
+                  for it in INT_STEPS] for g in GRID_STEPS]
+    tornado = {}
+    for label, key, delta, mode in TORNADO_DRIVERS:
+        lo = out([(key, -delta, mode)])["net_earnings"]
+        hi = out([(key, delta, mode)])["net_earnings"]
+        tornado[label] = (min(lo, hi), max(lo, hi))
+    return {"scenarios": scenarios, "grid_ne": grid_ne, "grid_cash": grid_cash,
+            "tornado": tornado, "base_ne": scenarios["Base case"]["net_earnings"]}
 
 
 def main():
@@ -195,6 +233,23 @@ def main():
                      if s == "CHECKS" and (v == "ERROR" or is_err(v))]
     check(not err_on_checks,
           f"CHECKS: {len(err_on_checks)} cell(s) flag ERROR/error: {err_on_checks[:8]}")
+    # Prove the tie-outs actually have teeth: break a model cell (BS cash) and
+    # confirm the integrity master flips to ERROR — a green-on-healthy check is
+    # meaningless if a mis-wired Checks sheet can't ever go red.
+    with tempfile.TemporaryDirectory() as td:
+        broken = os.path.join(td, "broken.xlsx")
+        wbb = openpyxl.load_workbook(args.model)
+        wbb[MODEL][f"{geo.lc}44"] = 1e12   # BS cash no longer ties; balance breaks
+        wbb.save(broken)
+        flipped = recalc_all(broken).get(("CHECKS", "C2"))
+        check(flipped == "ERROR",
+              f"CHECKS teeth: master stayed {flipped!r} after breaking a model "
+              f"cell (expected it to flip to ERROR)")
+
+    # ---------- Cover has no error cells (it links to Checks + hosts the legend) ----------
+    err_on_cover = [c for (s, c), v in vals.items() if s == "COVER" and is_err(v)]
+    check(not err_on_cover,
+          f"COVER: {len(err_on_cover)} cell(s) evaluate to an error: {err_on_cover[:8]}")
 
     # ---------- 3. DASHBOARD ----------
     ekpi = expected_kpis(sim, n)
@@ -211,18 +266,34 @@ def main():
 
     # ---------- 4. SENSITIVITY ----------
     ws_s = wb["Sensitivity"]
+    # 4a. file == builder: every written literal matches what the build placed
+    # (catches file corruption / a mis-placed or mis-rounded cell).
     for coord, want in placements.items():
         got = ws_s[coord].value
         check(got is not None and close(got, want),
               f"SENS: {coord} = {got!r}, expected {want}")
-    # independent ties back to the base-case simulation
-    base_ne = sim[38][n - 1]
-    # scenario table: Base-case row is the first data row (row 7); its columns
-    # C..G are revenue, ebitda, net earnings, closing cash, min-fc-cash.
-    check(close(ws_s["E7"].value, base_ne),
-          f"SENS: base-case net earnings E7 = {ws_s['E7'].value!r}, model = {base_ne:.2f}")
-    check(close(ws_s["C7"].value, sim[26][n - 1]),
-          f"SENS: base-case revenue C7 = {ws_s['C7'].value!r}, model = {sim[26][n-1]:.2f}")
+    # 4b. builder == independent oracle: the numbers the build wrote must equal a
+    # SECOND, validator-owned re-derivation from simulate() — this breaks the
+    # build-vs-build tautology, so a bug in compute_sensitivity is caught.
+    build_sens = info["sens_values"]
+    ind = indep_sensitivity(inputs, pack)
+    for name, kd, _note in build_sens["scenarios"]:
+        for key in ("revenue", "ebitda", "net_earnings", "closing_cash",
+                    "min_fc_cash"):
+            check(close(kd[key], ind["scenarios"][name][key]),
+                  f"SENS-ORACLE: scenario {name}.{key} build={kd[key]:.2f} "
+                  f"indep={ind['scenarios'][name][key]:.2f}")
+    for grid in ("grid_ne", "grid_cash"):
+        for i, rowb in enumerate(build_sens[grid]):
+            for j, vb in enumerate(rowb):
+                check(close(vb, ind[grid][i][j]),
+                      f"SENS-ORACLE: {grid}[{i}][{j}] build={vb:.2f} "
+                      f"indep={ind[grid][i][j]:.2f}")
+    for label, lo, hi in build_sens["tornado"]:
+        ilo, ihi = ind["tornado"][label]
+        check(close(lo, ilo) and close(hi, ihi),
+              f"SENS-ORACLE: tornado {label} build=({lo:.2f},{hi:.2f}) "
+              f"indep=({ilo:.2f},{ihi:.2f})")
     err_on_sens = [c for (s, c), v in vals.items() if s == "SENSITIVITY" and is_err(v)]
     check(not err_on_sens,
           f"SENS: {len(err_on_sens)} cell(s) evaluate to an error: {err_on_sens[:8]}")
