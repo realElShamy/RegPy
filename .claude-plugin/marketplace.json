@@ -1,0 +1,28 @@
+{
+  "name": "regpy-marketplace",
+  "owner": {
+    "name": "realElShamy"
+  },
+  "description": "RegTech tools by realElShamy — starting with a jurisdiction-aware three-statement financial modeling skill (Egypt + GCC).",
+  "plugins": [
+    {
+      "name": "three-statement-model",
+      "source": "./plugins/three-statement-model",
+      "displayName": "Three-Statement Financial Model (Egypt + GCC)",
+      "description": "Build a fully linked, self-balancing best-practice three-statement model workbook (Cover · Model · Checks/audit · Dashboard · Sensitivity) from a connected accounting system, uploaded financials, or manual inputs — with jurisdiction-aware tax/accounting treatment for Egypt and the GCC (EAS, IFRS, Zakat, corporate tax, DMTT, VAT).",
+      "category": "productivity",
+      "keywords": [
+        "finance",
+        "financial-model",
+        "three-statement",
+        "forecast",
+        "excel",
+        "egypt",
+        "gcc",
+        "ifrs",
+        "zakat"
+      ],
+      "license": "See repository LICENSE"
+    }
+  ]
+}

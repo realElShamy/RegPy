@@ -1,0 +1,23 @@
+{
+  "name": "three-statement-model",
+  "version": "1.0.0",
+  "description": "Jurisdiction-aware three-statement financial model builder: a deterministic, self-validating skill that produces a best-practice multi-sheet Excel workbook (Cover · Model · Checks/audit · Dashboard · Sensitivity) for Egypt and the GCC (EAS, IFRS, Zakat, corporate tax, DMTT, VAT).",
+  "author": {
+    "name": "realElShamy"
+  },
+  "homepage": "https://github.com/realElShamy/RegPy/tree/main/plugins/three-statement-model",
+  "repository": "https://github.com/realElShamy/RegPy",
+  "keywords": [
+    "finance",
+    "financial-modeling",
+    "three-statement",
+    "forecast",
+    "excel",
+    "openpyxl",
+    "egypt",
+    "gcc",
+    "ifrs",
+    "zakat",
+    "regtech"
+  ]
+}
