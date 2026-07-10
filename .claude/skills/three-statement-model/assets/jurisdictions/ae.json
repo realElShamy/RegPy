@@ -1,0 +1,30 @@
+{
+ "country": "United Arab Emirates",
+ "iso2": "ae",
+ "as_of": "2026-07",
+ "currency": "AED",
+ "units_label": "AED '000",
+ "accounting_framework": "IFRS (Commercial Companies Law FDL 32/2021; Ministerial Decision 114/2023: IFRS required, IFRS for SMEs permitted below AED 50m revenue; cash basis below AED 3m). English filings standard.",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": 0.09,
+  "basis": "Federal Corporate Tax 9% (FDL 47/2022, FYs from June 2023) on taxable income above AED 375,000; 0% band below. Flat 9% on EBT slightly overstates tax for small profits - acceptable simplification above ~AED 2m EBT."
+ },
+ "tax_recipes": {
+  "small_business_relief": "Revenue <= AED 3m per year (periods ending on/before 31 Dec 2026): may elect Small Business Relief - treated as having no taxable income; set tax_pct_ebt = 0 and disclose the sunset.",
+  "band_exact": "For precision near the band: tax_pct_ebt(year) = 0.09 * max(0, EBT - 375) / EBT (EBT in AED '000) - compute per year and set explicitly.",
+  "free_zone": "Qualifying Free Zone Person: 0% on qualifying income, 9% on non-qualifying (de minimis: lower of 5% of revenue or AED 5m; MD 229/2025 defines qualifying/excluded activities). Set a blended effective rate and disclose.",
+  "pillar_two": "DMTT 15% (Cabinet Decision 142/2024) for FYs from 1 Jan 2025, MNE groups >= EUR 750m (2-of-4 test). Use 0.15 effective if in scope."
+ },
+ "label_overrides": {},
+ "vat_note": "VAT 5% since 2018 (mandatory registration above AED 375,000; FDL 16/2025 amended the VAT law without changing the rate). AR/AP balances may be VAT-inclusive.",
+ "fiscal_year_note": "Any 12-month financial year; CT return + payment within 9 months of period end. AED pegged at 3.6725/USD.",
+ "depreciation_note": "No general statutory tax-depreciation schedule; accounting depreciation generally follows IFRS and is deductible (MD 173/2025 caps investment-property depreciation at 4% of cost where the realisation basis is elected).",
+ "pillar_two_note": "DMTT 15% in force for large MNE groups from FY2025; first returns due 2027.",
+ "disclosure": "Tax modeled as 9% of earnings before tax - a simplification of the AED 375,000 0% band, Small Business Relief, free-zone regimes and the DMTT; not tax advice. Statements per IFRS.",
+ "sources": [
+  "https://taxsummaries.pwc.com/united-arab-emirates/corporate/taxes-on-corporate-income",
+  "https://mof.gov.ae/corporate-tax/",
+  "https://tax.gov.ae/"
+ ]
+}

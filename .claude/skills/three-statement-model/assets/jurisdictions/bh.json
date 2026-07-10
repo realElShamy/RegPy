@@ -1,0 +1,28 @@
+{
+ "country": "Bahrain",
+ "iso2": "bh",
+ "as_of": "2026-07",
+ "currency": "BHD",
+ "units_label": "BHD '000",
+ "accounting_framework": "IFRS is the sole GAAP (no local Bahraini GAAP; CCL Art 219). CBB: IFRS for conventional banks, AAOIFI FAS for Islamic banks.",
+ "default_tax_line": {
+  "label": "Taxes",
+  "rate": 0.0,
+  "basis": "No general corporate income tax as of mid-2026 (the 46% tax applies to hydrocarbon extraction only). A draft 10% CIT (thresholds: BHD 1m revenue / BHD 200k profit; 10% above BHD 200k taxable income) is targeted at 1 Jan 2027 but UNENACTED as of June 2026."
+ },
+ "tax_recipes": {
+  "hydrocarbon": "46% on oil/gas extraction income (Amiri Decree 22/1979).",
+  "cit_2027_watch": "If the draft 10% CIT is enacted, forecast years from 2027 should carry tax_pct_ebt ~ 0.10 for in-scope companies - flag this in any forecast crossing 2027 and let the user choose.",
+  "pillar_two": "DMTT 15% (Decree-Law 11/2024, NBR-administered) for FYs from 1 Jan 2025, groups >= EUR 750m: use 0.15 if in scope."
+ },
+ "label_overrides": {},
+ "vat_note": "VAT 10% since 2022 (mandatory registration BHD 37,500). AR/AP balances may be VAT-inclusive. A 10% municipality tax applies to commercial property rentals and residential rentals to expatriates.",
+ "fiscal_year_note": "Calendar year default. BHD pegged at 0.376/USD; amounts quoted to 3 decimals (fils).",
+ "depreciation_note": "No codified tax-depreciation schedule (no general income tax); book depreciation per IFRS.",
+ "pillar_two_note": "DMTT in force from FY2025 for large MNE groups.",
+ "disclosure": "No general corporate income tax is modeled (0% default) per the law in force as of mid-2026; the hydrocarbon 46% regime, the 15% DMTT for large MNE groups, and the draft 10% CIT targeted for 2027 are outside the default - forecasts extending into 2027+ should consider the draft CIT. Not tax advice.",
+ "sources": [
+  "https://taxsummaries.pwc.com/bahrain/corporate/taxes-on-corporate-income",
+  "https://www.nbr.gov.bh/"
+ ]
+}
